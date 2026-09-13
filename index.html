@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121418">
+<title>X Training</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #F2F2EF;
+    --card: #FFFFFF;
+    --ink: #15171B;
+    --muted: #5E646C;
+    --line: #DADCD8;
+    --accent: #D9480F;
+    --ok: #1F7A4F;
+    --ok-soft: #DDF2E7;
+    --alarm: #C62828;
+    --alarm-soft: #FBE0E0;
+    --btn: #15171B;
+    --btn-ink: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121418;
+      --card: #1C1F24;
+      --ink: #F1F2F4;
+      --muted: #9AA1AA;
+      --line: #2C3038;
+      --accent: #FF6A2C;
+      --ok: #4BC48B;
+      --ok-soft: #15321F;
+      --alarm: #FF5A5A;
+      --alarm-soft: #3D1717;
+      --btn: #F1F2F4;
+      --btn-ink: #121418;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: Verdana, Tahoma, sans-serif; -webkit-tap-highlight-color: transparent; }
+  .app {
+    max-width: 560px; margin: 0 auto; min-height: 100dvh;
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  h1 { font-size: 20px; margin: 0; }
+  h1 b { color: var(--accent); }
+  .tag { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; font-size: 15px; line-height: 1.5; }
+  summary { font-weight: bold; cursor: pointer; }
+  details ol { padding-left: 20px; margin: 10px 0; }
+  details li { margin-bottom: 6px; }
+  .nota { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; color: var(--muted); }
+  .chip.si { color: var(--ok); border-color: var(--ok); }
+  .chip.no { color: var(--alarm); border-color: var(--alarm); }
+
+  .strumenti { display: flex; gap: 8px; }
+  .strumenti button {
+    flex: 1; font: inherit; font-size: 14px; padding: 12px 6px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  }
+
+  .info { display: flex; justify-content: space-between; font-size: 16px; color: var(--muted); }
+  .info strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .pannello {
+    flex: 1; min-height: 240px; background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    padding: 20px 16px; text-align: center;
+  }
+  .etichetta { font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .tempo { font-size: clamp(72px, 28vw, 150px); font-weight: bold; line-height: 1; font-variant-numeric: tabular-nums; }
+  .sotto { font-size: 16px; color: var(--muted); min-height: 1.3em; }
+  .pannello.fermo .tempo, .pannello.scritto .tempo { color: var(--line); }
+  .pannello.recupero .etichetta, .pannello.recupero .tempo { color: var(--accent); }
+  .pannello.attesa { background: var(--ok-soft); border-color: var(--ok); }
+  .pannello.attesa .etichetta, .pannello.attesa .tempo { color: var(--ok); }
+  .pannello.allarme { border-color: var(--alarm); animation: lampeggio 1s steps(1) infinite; }
+  .pannello.allarme .etichetta, .pannello.allarme .tempo { color: var(--alarm); }
+  @keyframes lampeggio { 0% { background: var(--alarm-soft); } 50% { background: var(--card); } }
+  .conferma {
+    margin-top: 8px; width: 100%; max-width: 360px; font: inherit; font-size: 20px; font-weight: bold;
+    padding: 16px 24px; border-radius: 14px; border: 0; background: var(--ok); color: #FFFFFF;
+  }
+  .pannello.allarme .conferma { background: var(--alarm); }
+
+  .timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .timer button {
+    font: inherit; font-weight: bold; font-size: 30px; height: 88px; border-radius: 16px; border: 0;
+    background: var(--btn); color: var(--btn-ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;
+  }
+  .timer button small { font-size: 12px; font-weight: normal; opacity: .75; margin-top: 4px; }
+  .timer button:active { transform: scale(.96); background: var(--accent); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1><b>X</b> Training</h1>
+    <span class="tag">prova del suono · fase 0</span>
+  </header>
+
+  <details>
+    <summary>📋 Le 5 prove da fare (tocca per aprire)</summary>
+    <p class="nota">Prima alza il <strong>volume dei video</strong>, non quello della suoneria: il bip esce da lì.</p>
+    <ol>
+      <li>Tocca <strong>Senti il bip</strong>: devi sentire tre bip e il telefono deve vibrare.</li>
+      <li>Tocca <strong>Prova veloce</strong> e lascia il telefono sul tavolo: dopo 10 secondi bip e vibrazione, dopo altri 10 secondi l'allarme. <strong>Ho scritto la serie</strong> lo zittisce.</li>
+      <li><strong>Prova veloce</strong>, poi spegni lo schermo col tasto laterale: suona lo stesso?</li>
+      <li><strong>Prova veloce</strong>, poi apri WhatsApp: suona lo stesso?</li>
+      <li>Tocca <strong>180</strong> e non toccare più il telefono: lo schermo deve restare acceso fino alla fine.</li>
+    </ol>
+    <p class="nota">La 1, la 2 e la 5 devono funzionare. La 3 e la 4 servono solo a sapere cosa succede se ti distrai. Dimmi com'è andata ogni prova.</p>
+  </details>
+
+  <div class="chips">
+    <span class="chip" id="chSchermo"></span>
+    <span class="chip" id="chSuono"></span>
+    <span class="chip" id="chVibra"></span>
+  </div>
+
+  <div class="strumenti">
+    <button id="senti">🔊 Senti il bip</button>
+    <button id="veloce">⚡ Prova veloce</button>
+    <button id="azzera">↺ Azzera</button>
+  </div>
+
+  <div class="info">
+    <span>Serie <strong id="serie">0</strong></span>
+    <span>⏱ esercizio <strong id="crono">0:00</strong></span>
+  </div>
+
+  <section class="pannello fermo" id="pannello">
+    <div class="etichetta" id="etichetta"></div>
+    <div class="tempo" id="tempo"></div>
+    <div class="sotto" id="sotto"></div>
+    <button class="conferma" id="conferma" hidden>✓ Ho scritto la serie</button>
+  </section>
+
+  <div class="timer">
+    <button data-sec="60">60<small>sec</small></button>
+    <button data-sec="90">90<small>sec</small></button>
+    <button data-sec="120">120<small>sec</small></button>
+    <button data-sec="180">180<small>sec</small></button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const GRAZIA = 60;          // secondi tra la fine del recupero e l'allarme
+  const $ = id => document.getElementById(id);
+
+  // stato: fermo | recupero | attesa | allarme | scritto
+  let stato = 'fermo';
+  let fineRecupero = 0, fineAttesa = 0, inizioEsercizio = 0, serie = 0;
+
+  // ---------- suono ----------
+  // I suoni vengono programmati in anticipo nel "motore audio" del telefono,
+  // agli orari giusti: così suonano puntuali anche se la pagina rallenta.
+  let ctx = null, suoni = [], allarmeFino = 0;
+
+  function audio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) ctx = new AC();
+    }
+    if (ctx && ctx.state !== 'running') ctx.resume();
+    return ctx;
+  }
+
+  function tono(quando, freq, durata, volume) {
+    if (!ctx) return;
+    const t = ctx.currentTime + Math.max(0, (quando - Date.now()) / 1000);
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(volume, t + 0.01);
+    g.gain.setValueAtTime(volume, t + durata - 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + durata);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + durata + 0.05);
+    const s = { osc, g };
+    suoni.push(s);
+    osc.onended = () => { g.disconnect(); suoni = suoni.filter(x => x !== s); };
+  }
+
+  function zittisci() {
+    suoni.forEach(s => { try { s.g.disconnect(); s.osc.stop(); } catch (e) {} });
+    suoni = [];
+    allarmeFino = 0;
+    if (navigator.vibrate) navigator.vibrate(0);
+  }
+
+  // fine recupero: tre bip brevi e acuti
+  function bipFine(quando) {
+    [0, 250, 500].forEach(d => tono(quando + d, 1319, 0.16, 0.3));
+  }
+
+  // allarme: sirena a due toni, una volta al secondo
+  function programmaAllarme(da, secondi) {
+    for (let i = 0; i < secondi; i++) {
+      tono(da + i * 1000, 988, 0.25, 0.35);
+      tono(da + i * 1000 + 400, 740, 0.25, 0.35);
+    }
+    allarmeFino = da + secondi * 1000;
+  }
+
+  // (ri)programma i suoni partendo dagli orari salvati
+  function programma() {
+    if (!ctx) return;
+    zittisci();
+    if (stato === 'recupero') { bipFine(fineRecupero); programmaAllarme(fineAttesa, 30); }
+    else if (stato === 'attesa') programmaAllarme(fineAttesa, 30);
+    else if (stato === 'allarme') programmaAllarme(Date.now() + 200, 30);
+  }
+
+  // ---------- vibrazione ----------
+  let prossimaVibrazione = 0;
+  function vibra(schema) { if (navigator.vibrate) navigator.vibrate(schema); }
+
+  // ---------- schermo sempre acceso ----------
+  let wakeLock = null, vuoleSchermo = false, chiedendo = false;
+  async function schermoAcceso() {
+    vuoleSchermo = true;
+    if (!('wakeLock' in navigator)) { chip('chSchermo', 'Schermo sempre acceso: non supportato', 'no'); return; }
+    if (wakeLock || chiedendo || document.visibilityState !== 'visible') return;
+    chiedendo = true;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      chip('chSchermo', 'Schermo sempre acceso ✓', 'si');
+      wakeLock.addEventListener('release', () => {
+        wakeLock = null;
+        chip('chSchermo', 'Schermo: si può spegnere', '');
+      });
+    } catch (e) {
+      chip('chSchermo', 'Schermo sempre acceso: bloccato', 'no');
+    }
+    chiedendo = false;
+  }
+
+  function chip(id, testo, classe) {
+    const el = $(id);
+    el.textContent = testo;
+    el.className = 'chip ' + (classe || '');
+  }
+
+  // ---------- azioni ----------
+  function avviaRecupero(secondi, grazia) {
+    audio();
+    schermoAcceso();
+    const ora = Date.now();
+    if (!inizioEsercizio) inizioEsercizio = ora;   // il primo timer = prima serie fatta
+    serie++;
+    fineRecupero = ora + secondi * 1000;
+    fineAttesa = fineRecupero + grazia * 1000;
+    stato = 'recupero';
+    programma();
+    chip('chSuono', 'Suono attivo ✓', 'si');
+    aggiorna();
+  }
+
+  function conferma() {
+    zittisci();
+    stato = 'scritto';
+    aggiorna();
+  }
+
+  function azzera() {
+    zittisci();
+    stato = 'fermo';
+    serie = 0;
+    inizioEsercizio = 0;
+    aggiorna();
+  }
+
+  // ---------- orologio ----------
+  function mmss(sec) {
+    return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  }
+
+  function tick() {
+    const ora = Date.now();
+    if (stato === 'recupero' && ora >= fineRecupero) {
+      stato = 'attesa';
+      if (ora - fineRecupero < 3000) vibra([400, 150, 400, 150, 400]);
+    }
+    if (stato === 'attesa' && ora >= fineAttesa) {
+      stato = 'allarme';
+      prossimaVibrazione = 0;
+    }
+    if (stato === 'allarme') {
+      if (ora >= prossimaVibrazione) { vibra([700, 300, 700]); prossimaVibrazione = ora + 2500; }
+      if (ctx && allarmeFino - ora < 5000) programmaAllarme(Math.max(allarmeFino, ora + 100), 30);
+    }
+    aggiorna();
+  }
+
+  function aggiorna() {
+    const ora = Date.now();
+    $('pannello').className = 'pannello ' + stato;
+    $('serie').textContent = serie;
+    $('crono').textContent = inizioEsercizio ? mmss(Math.floor((ora - inizioEsercizio) / 1000)) : '0:00';
+    $('conferma').hidden = !(stato === 'attesa' || stato === 'allarme');
+
+    let e, t, s;
+    if (stato === 'fermo') {
+      e = 'Pronto'; t = '—'; s = 'Quando il cliente finisce la serie, tocca un tempo qui sotto';
+    } else if (stato === 'recupero') {
+      e = 'Recupero'; t = mmss(Math.ceil((fineRecupero - ora) / 1000)); s = 'Serie ' + serie + ' fatta';
+    } else if (stato === 'attesa') {
+      e = 'Recupero finito'; t = 'VIA';
+      s = 'Scrivi la serie · allarme tra ' + Math.max(0, Math.ceil((fineAttesa - ora) / 1000)) + ' s';
+    } else if (stato === 'allarme') {
+      e = 'Scrivi la serie!'; t = '⏰'; s = 'Tocca il bottone verde per zittirlo';
+    } else {
+      e = 'Serie scritta ✓'; t = '—'; s = 'Tocca un tempo quando finisce la prossima serie';
+    }
+    $('etichetta').textContent = e;
+    $('tempo').textContent = t;
+    $('sotto').textContent = s;
+  }
+
+  // ---------- collegamenti ----------
+  document.querySelectorAll('[data-sec]').forEach(b =>
+    b.addEventListener('click', () => avviaRecupero(Number(b.dataset.sec), GRAZIA)));
+  $('veloce').addEventListener('click', () => avviaRecupero(10, 10));
+  $('senti').addEventListener('click', () => {
+    audio();
+    schermoAcceso();
+    bipFine(Date.now() + 50);
+    vibra([400, 150, 400, 150, 400]);
+    chip('chSuono', 'Suono attivo ✓', 'si');
+  });
+  $('conferma').addEventListener('click', conferma);
+  $('azzera').addEventListener('click', azzera);
+
+  // tornando sulla pagina: schermo di nuovo acceso e suoni riallineati all'ora vera
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    if (vuoleSchermo) schermoAcceso();
+    if (ctx && ctx.state !== 'running') ctx.resume();
+    tick();
+    programma();
+  });
+
+  chip('chSchermo', 'Schermo: si blocca al primo tocco', '');
+  chip('chSuono', 'Suono: si attiva al primo tocco', '');
+  if ('vibrate' in navigator) chip('chVibra', 'Vibrazione ✓', 'si');
+  else chip('chVibra', 'Vibrazione: non supportata', 'no');
+
+  schermoAcceso();
+  aggiorna();
+  setInterval(tick, 250);
+})();
+</script>
+</body>
+</html>
