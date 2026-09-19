@@ -1,7 +1,7 @@
 // X Training: fa funzionare l'app anche senza internet in palestra.
 // Prima prova a scaricare la versione nuova (max 3 secondi), altrimenti usa la copia salvata.
-const CACHE = 'xtraining-v1';
-const FILE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'xtraining-v2';
+const FILE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './lib/jspdf.umd.min.js'];
 
 self.addEventListener('install', ev => {
   ev.waitUntil(caches.open(CACHE).then(c => c.addAll(FILE)));

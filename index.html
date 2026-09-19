@@ -60,10 +60,12 @@
   .pulsante { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: bold; white-space: nowrap; }
   .grande { width: 100%; padding: 16px; border-radius: 14px; border: 0; background: var(--btn); color: var(--btn-ink); font-size: 18px; font-weight: bold; }
   .grande.secondario { background: var(--card); color: var(--ink); border: 1px dashed var(--muted); }
+  .grande.accento { background: var(--accent); color: #FFFFFF; }
   .campo { width: 100%; font: inherit; font-size: 18px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
   textarea.campo { min-height: 90px; resize: vertical; }
   .vuoto { color: var(--muted); font-size: 15px; text-align: center; padding: 12px; line-height: 1.5; }
   .piede { margin-top: auto; display: flex; justify-content: center; }
+  .aiuto { font-size: 13px; color: var(--muted); margin: 4px 0 0; line-height: 1.4; }
 
   .lista { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   .lista:empty { display: none; }
@@ -74,16 +76,21 @@
   .riga .lato { background: none; border: 0; border-left: 1px solid var(--line); padding: 0 18px; font-size: 18px; color: var(--muted); }
   .riga.aggiungi .principale { color: var(--accent); font-weight: bold; }
 
+  /* riposo tra esercizi, nell'elenco */
+  .banner-riposo {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 14px; padding: 10px 16px; font-size: 16px;
+  }
+  .banner-riposo strong { font-size: 28px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .banner-riposo.finito { background: var(--ok-soft); border-color: var(--ok); }
+  .banner-riposo.finito strong { color: var(--ok); }
+
   /* allenamento */
   .allenamento { gap: 10px; }
   .testa-es { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
   .nome-es { font-size: 24px; font-weight: bold; line-height: 1.2; overflow-wrap: anywhere; }
   .ultima { font-size: 14px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
   .ultima strong { color: var(--ink); white-space: nowrap; }
-  .bollino-prova {
-    position: fixed; left: 50%; bottom: 4px; transform: translateX(-50%); z-index: 4; pointer-events: none;
-    background: var(--accent); color: #FFFFFF; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 999px; opacity: .85;
-  }
   .ultima .nota { display: block; margin-top: 2px; color: var(--alarm); }
   .info { display: flex; justify-content: space-between; font-size: 15px; color: var(--muted); }
   .info strong { color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -102,6 +109,7 @@
   .pannello.allarme { border-color: var(--alarm); animation: lampeggio 1s steps(1) infinite; }
   .pannello.allarme .etichetta { color: var(--alarm); }
   @keyframes lampeggio { 0% { background: var(--alarm-soft); } 50% { background: var(--card); } }
+  .era-serie { margin-top: 4px; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; color: var(--muted); }
   .fatte { display: flex; flex-wrap: wrap; gap: 6px; }
   .fatte:empty { display: none; }
   .fatta { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 12px; font-size: 15px; font-variant-numeric: tabular-nums; }
@@ -125,6 +133,7 @@
 
   /* riepilogo */
   .scheda { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .scheda + .scheda { margin-top: 8px; }
   .scheda h3 { margin: 0 0 6px; font-size: 18px; }
   .scheda .dett { font-size: 15px; line-height: 1.6; }
   .scheda .muto { color: var(--muted); }
@@ -139,21 +148,26 @@
   .spenti { opacity: .35; pointer-events: none; }
   .spunta { display: flex; align-items: center; gap: 10px; font-size: 16px; margin-top: 8px; color: var(--ink) !important; }
   .spunta input { width: 22px; height: 22px; margin: 0; }
-  .aiuto { font-size: 13px; color: var(--muted); margin: 4px 0 0; line-height: 1.4; }
   .riassunto-live { margin-top: 14px; font-size: 15px; background: var(--bg); border-radius: 10px; padding: 10px 12px; }
   .bottoni { display: flex; gap: 8px; margin-top: 18px; }
   .bottoni button { flex: 1; padding: 14px 8px; border-radius: 12px; font-weight: bold; font-size: 15px; border: 1px solid var(--line); background: var(--card); }
   .bottoni .primario { background: var(--btn); color: var(--btn-ink); border: 0; }
   .bottoni .pericolo { color: var(--alarm); }
+  .spazio-sopra { margin-top: 16px; }
 
   .avviso {
     position: fixed; left: 16px; right: 16px; top: 12px; z-index: 5; max-width: 528px; margin: 0 auto;
     background: var(--alarm); color: #FFFFFF; padding: 14px; border-radius: 12px; text-align: center; font-weight: bold;
   }
+  .bollino-prova {
+    display: block; width: fit-content; max-width: 100%; margin: 0 auto 8px;
+    background: var(--accent); color: #FFFFFF; font-size: 11px; font-weight: bold; padding: 3px 12px; border-radius: 999px; text-align: center;
+  }
 </style>
 </head>
 <body>
 <div class="app">
+  <div id="bollinoProva" class="bollino-prova" hidden>MODALITÀ PROVA · tempi ×10 · archivio separato</div>
 
   <!-- CLIENTI -->
   <section id="scClienti" class="schermo" hidden>
@@ -174,6 +188,10 @@
       <strong id="escCliente"></strong>
       <button class="pulsante" id="escFine">Fine sessione</button>
     </header>
+    <div id="escRiposo" class="banner-riposo" hidden>
+      <span id="escRiposoTesto"></span>
+      <strong id="escRiposoTempo"></strong>
+    </div>
     <h2>Quale esercizio?</h2>
     <input id="escCerca" class="campo" placeholder="Scrivi il nome dell'esercizio" autocomplete="off" enterkeyhint="go">
     <div id="listaEsercizi" class="lista"></div>
@@ -202,10 +220,11 @@
       <div class="etichetta" id="allEtichetta"></div>
       <div class="tempo" id="allTempo"></div>
       <div class="sotto" id="allSotto"></div>
+      <button class="era-serie" id="allEraSerie" hidden>Era la 1ª serie? Salvala</button>
     </section>
     <div id="allFatte" class="fatte"></div>
     <div class="campi">
-      <button class="casella" data-campo="numero"><span>Numero</span><strong id="valNumero"></strong></button>
+      <button class="casella" data-campo="numero"><span>Peso / sec</span><strong id="valNumero"></strong></button>
       <button class="casella" data-campo="reps"><span>Ripetizioni</span><strong id="valReps"></strong></button>
     </div>
     <div class="tastierino" id="tastierino">
@@ -230,8 +249,10 @@
       <span></span>
     </header>
     <div id="riepTesta"></div>
-    <div id="riepLista" class="schermo-lista"></div>
-    <p class="aiuto">🔒 Le note restano solo tue. Il PDF da mandare al cliente arriva con il prossimo aggiornamento.</p>
+    <div id="riepLista"></div>
+    <p class="aiuto">🔒 Le note restano solo tue: nel PDF non ci sono.</p>
+    <button class="grande accento" id="riepPdf">📄 Invia il PDF</button>
+    <p class="aiuto" id="riepPdfInfo"></p>
     <button class="grande" id="riepChiudi">Chiudi la lezione</button>
   </section>
 
@@ -244,6 +265,7 @@
   <input id="dcNome" class="campo" autocomplete="off" autocapitalize="words">
   <label for="dcEmail">Email (per mandargli il riepilogo)</label>
   <input id="dcEmail" class="campo" type="email" autocomplete="off" inputmode="email">
+  <button id="dcInvia" class="grande accento spazio-sopra" hidden></button>
   <div class="bottoni">
     <button id="dcElimina" class="pericolo">Elimina</button>
     <button id="dcAnnulla">Annulla</button>
@@ -257,7 +279,7 @@
   <label class="spunta"><input type="checkbox" id="dxUltima"> C'è un'ultima serie da salvare</label>
   <p class="aiuto" id="dxAiuto"></p>
   <div class="due" id="dxCampi">
-    <div><label for="dxNumero">Numero</label><input id="dxNumero" class="campo" inputmode="decimal" autocomplete="off"></div>
+    <div><label for="dxNumero">Peso / sec</label><input id="dxNumero" class="campo" inputmode="decimal" autocomplete="off"></div>
     <div><label for="dxReps">Ripetizioni</label><input id="dxReps" class="campo" inputmode="numeric" autocomplete="off"></div>
   </div>
   <div class="riassunto-live" id="dxRiassunto"></div>
@@ -273,7 +295,7 @@
 <dialog id="dlgSerie">
   <h3 id="dsTitolo">Serie</h3>
   <div class="due">
-    <div><label for="dsNumero">Numero</label><input id="dsNumero" class="campo" inputmode="decimal" autocomplete="off"></div>
+    <div><label for="dsNumero">Peso / sec</label><input id="dsNumero" class="campo" inputmode="decimal" autocomplete="off"></div>
     <div><label for="dsReps">Ripetizioni</label><input id="dsReps" class="campo" inputmode="numeric" autocomplete="off"></div>
   </div>
   <div class="bottoni">
@@ -284,7 +306,6 @@
 </dialog>
 
 <div id="avvisoSuono" class="avviso" hidden>🔇 Tocca lo schermo per riattivare il suono</div>
-<div id="bollinoProva" class="bollino-prova" hidden>MODALITÀ PROVA · tempi ×10 · archivio separato</div>
 
 <script>
 (() => {
@@ -302,6 +323,7 @@
 
   // ================= DATI =================
   // db: tutto l'archivio · cur: la lezione in corso (serve a ripartire se il telefono si blocca)
+  // cur.riposo: il riposo tra un esercizio e l'altro, quando si è nell'elenco esercizi
   function leggi(chiave, base) {
     try { return JSON.parse(localStorage.getItem(chiave)) || base; } catch (e) { return base; }
   }
@@ -328,10 +350,17 @@
   const num = s => parseFloat(String(s).replace(',', '.'));
   const fmt = n => String(n).replace('.', ',');
   const pulisci = v => String(v).trim().replace('.', ',');
-  const giorno = ts => { const d = new Date(ts); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); };
-  const mmss = sec => Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  const due = n => String(n).padStart(2, '0');
+  const giorno = ts => { const d = new Date(ts); return due(d.getDate()) + '/' + due(d.getMonth() + 1); };
+  const orario = ts => { const d = new Date(ts); return due(d.getHours()) + ':' + due(d.getMinutes()); };
+  const mmss = sec => Math.floor(sec / 60) + ':' + due(sec % 60);
   const alfabetico = (a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' });
   const cliente = id => db.clienti.find(c => c.id === id);
+  const primoNome = nome => String(nome).trim().split(/\s+/)[0];
+
+  // tempi di un recupero/riposo: in che fase siamo adesso?
+  const statoDaTempi = (t, ora) => ora < t.fineRecupero ? 'recupero' : ora < t.fineAttesa ? 'attesa' : 'allarme';
+  const tempiDi = e => ({ inizioRecupero: e.inizioRecupero, fineRecupero: e.fineRecupero, fineAttesa: e.fineAttesa });
 
   function testoSerie(s) {
     if (s.numero && s.reps) return s.numero + ' × ' + s.reps;
@@ -364,6 +393,10 @@
       for (const e of s.esercizi) if (e.nome === nome && (!trovato || e.fine > trovato.fine)) trovato = e;
     }
     return trovato;
+  }
+
+  function ultimaSessione(clienteId) {
+    return db.sessioni.filter(s => s.clienteId === clienteId && s.esercizi.length).sort((a, b) => b.inizio - a.inizio)[0] || null;
   }
 
   function salvaSessione() {
@@ -425,19 +458,32 @@
     allarmeFino = da + secondi * 1000;
   }
 
-  // (ri)programma i suoni partendo dagli orari salvati
+  // (ri)programma i suoni partendo dagli orari salvati: dell'esercizio in corso,
+  // oppure del riposo tra esercizi se si è nell'elenco
   function programma() {
     if (!ctx) return;
     zittisci();
-    const e = cur && cur.es;
-    if (!e) return;
-    if (e.stato === 'recupero') { bipFine(e.fineRecupero); programmaAllarme(e.fineAttesa, 30); }
-    else if (e.stato === 'attesa') programmaAllarme(e.fineAttesa, 30);
-    else if (e.stato === 'allarme') programmaAllarme(Date.now() + 200, 30);
+    if (!cur) return;
+    let t = null, stato = null;
+    if (cur.es) { t = cur.es; stato = cur.es.stato; }
+    else if (cur.riposo) { t = cur.riposo; stato = statoDaTempi(t, Date.now()); }
+    if (!t) return;
+    if (stato === 'recupero') { bipFine(t.fineRecupero); programmaAllarme(t.fineAttesa, 30); }
+    else if (stato === 'attesa') programmaAllarme(t.fineAttesa, 30);
+    else if (stato === 'allarme') programmaAllarme(Date.now() + 200, 30);
+  }
+
+  function fermaRiposo() {
+    if (cur) cur.riposo = null;
+    zittisci();
   }
 
   let prossimaVibrazione = 0;
   function vibra(schema) { if (navigator.vibrate) navigator.vibrate(schema); }
+  function continuaAllarme(ora) {
+    if (ora >= prossimaVibrazione) { vibra([700, 300, 700]); prossimaVibrazione = ora + 2500; }
+    if (ctx && allarmeFino - ora < 5000) programmaAllarme(Math.max(allarmeFino, ora + 100), 30);
+  }
 
   // ================= SCHERMO SEMPRE ACCESO =================
   let wakeLock = null, vuoleSchermo = false, chiedendo = false;
@@ -505,19 +551,35 @@
     $('dcNome').value = c ? c.nome : '';
     $('dcEmail').value = c ? (c.email || '') : '';
     $('dcElimina').hidden = !c;
+    const s = c ? ultimaSessione(c.id) : null;
+    $('dcInvia').hidden = !s;
+    if (s) {
+      $('dcInvia').textContent = '📄 Invia la lezione del ' + giorno(s.inizio) + (s.inviato ? ' (già inviata)' : '');
+      caricaPdf();
+    }
     $('dlgCliente').showModal();
     if (!c) $('dcNome').focus();
   }
-  $('dcSalva').addEventListener('click', () => {
+  // scrive nel cliente quello che c'è nella finestra; restituisce falso se manca il nome
+  function applicaCliente() {
     const nome = $('dcNome').value.trim();
     const email = $('dcEmail').value.trim();
-    if (!nome) { $('dcNome').focus(); return; }
+    if (!nome) { $('dcNome').focus(); return false; }
     const c = clienteInModifica && cliente(clienteInModifica);
     if (c) { c.nome = nome; c.email = email; }
     else db.clienti.push({ id: nuovoId(), nome, email });
     salva();
+    return true;
+  }
+  $('dcSalva').addEventListener('click', () => {
+    if (!applicaCliente()) return;
     $('dlgCliente').close();
     renderClienti();
+  });
+  $('dcInvia').addEventListener('click', () => {
+    if (!applicaCliente()) return;
+    const s = ultimaSessione(clienteInModifica);
+    if (s) inviaPdf(s);
   });
   $('dcAnnulla').addEventListener('click', () => $('dlgCliente').close());
   $('dcElimina').addEventListener('click', () => {
@@ -528,11 +590,12 @@
     $('dlgCliente').close();
     renderClienti();
   });
+  $('dlgCliente').addEventListener('close', renderClienti);
 
   function iniziaSessione(clienteId) {
     audio();
     schermoAcceso();
-    cur = { sessione: { id: nuovoId(), clienteId, inizio: Date.now(), esercizi: [] }, schermo: 'scEsercizi', es: null };
+    cur = { sessione: { id: nuovoId(), clienteId, inizio: Date.now(), esercizi: [] }, schermo: 'scEsercizi', es: null, riposo: null };
     $('escCerca').value = '';
     vai('scEsercizi');
   }
@@ -542,6 +605,8 @@
   function renderEsercizi() {
     const c = cliente(cur.sessione.clienteId);
     $('escCliente').textContent = c ? c.nome : '';
+    $('escRiposo').hidden = !cur.riposo;
+    aggiornaRiposoElenco();
     const filtro = $('escCerca').value.trim();
     const f = filtro.toLowerCase();
 
@@ -574,6 +639,17 @@
     $('escModifica').textContent = modificaElenco ? 'Fatto' : 'Modifica elenco';
   }
 
+  // il riposo tra esercizi che continua mentre scegli il prossimo
+  function aggiornaRiposoElenco() {
+    const r = cur && cur.riposo;
+    if (!r || $('scEsercizi').hidden) return;
+    const ora = Date.now();
+    const inCorso = statoDaTempi(r, ora) === 'recupero';
+    $('escRiposo').className = 'banner-riposo' + (inCorso ? '' : ' finito');
+    $('escRiposoTesto').textContent = inCorso ? 'Riposo tra esercizi' : 'Riposo finito: scegli l\'esercizio';
+    $('escRiposoTempo').textContent = inCorso ? mmss(Math.ceil((r.fineRecupero - ora) / 1000)) : 'VIA';
+  }
+
   function scegliDaCampo() {
     const nome = $('escCerca').value.trim().replace(/\s+/g, ' ');
     if (!nome) return;
@@ -596,8 +672,9 @@
     } else if (b.dataset.es) iniziaEsercizio(b.dataset.es);
   });
   $('escModifica').addEventListener('click', () => { modificaElenco = !modificaElenco; renderEsercizi(); });
-  $('escFine').addEventListener('click', () => vai('scRiepilogo'));
+  $('escFine').addEventListener('click', () => { fermaRiposo(); vai('scRiepilogo'); });
   $('escIndietro').addEventListener('click', () => {
+    fermaRiposo();
     if (cur.sessione.esercizi.length) { vai('scRiepilogo'); return; }
     cur = null;
     salva();
@@ -608,6 +685,7 @@
   // ================= ALLENAMENTO =================
   // stati: pronto (prima serie) · recupero · attesa (recupero finito, 60 s per scrivere)
   //        allarme · scrivendo (hai iniziato a scrivere dopo il recupero)
+  // es.riposo: 'nuovo' o 'ereditato' quando il tempo che scorre è un riposo tra esercizi, non un recupero
   let campoAttivo = null, fresco = false;
 
   function iniziaEsercizio(nome) {
@@ -615,15 +693,22 @@
     schermoAcceso();
     const prima = ultimaVolta(cur.sessione.clienteId, nome);
     const r = prima ? riassunto(prima.serie) : null;
-    cur.es = {
+    const es = {
       nome, serie: [], inizio: 0,
       numero: r && r.max !== null ? fmt(r.max) : '', reps: '',
-      stato: 'pronto', inizioRecupero: 0, fineRecupero: 0, fineAttesa: 0,
+      stato: 'pronto', riposo: false, inizioRecupero: 0, fineRecupero: 0, fineAttesa: 0,
     };
-    $('escCerca').value = '';
-    modificaElenco = false;
     campoAttivo = 'reps';
     fresco = true;
+    if (cur.riposo) {
+      // il riposo partito nell'esercizio prima continua qui
+      Object.assign(es, tempiDi(cur.riposo), { stato: statoDaTempi(cur.riposo, Date.now()), riposo: 'ereditato' });
+      if (es.stato === 'recupero') campoAttivo = null;
+      cur.riposo = null;
+    }
+    cur.es = es;
+    $('escCerca').value = '';
+    modificaElenco = false;
     vai('scAllenamento');
   }
 
@@ -658,10 +743,12 @@
     const prossima = e.serie.length + 1;
     let et = '', t = '', so = '';
     if (e.stato === 'pronto') {
-      et = 'Serie ' + prossima; so = 'Finita la serie: scrivi le ripetizioni e tocca un tempo';
+      et = 'Serie ' + prossima;
+      so = 'Scrivi le ripetizioni e tocca un tempo. Senza ripetizioni il tempo è un riposo tra esercizi';
     } else if (e.stato === 'recupero') {
-      et = 'Recupero'; t = mmss(Math.max(0, Math.ceil((e.fineRecupero - ora) / 1000)));
-      so = 'Serie ' + e.serie.length + ' salvata';
+      et = e.riposo ? 'Riposo tra esercizi' : 'Recupero';
+      t = mmss(Math.max(0, Math.ceil((e.fineRecupero - ora) / 1000)));
+      so = e.riposo === 'ereditato' ? 'Continua dall\'esercizio prima' : e.riposo ? 'Nessuna serie salvata' : 'Serie ' + e.serie.length + ' salvata';
     } else if (e.stato === 'attesa') {
       et = 'Via! Serie ' + prossima;
       so = 'Scrivi le ripetizioni · allarme tra ' + Math.max(0, Math.ceil((e.fineAttesa - ora) / 1000)) + ' s';
@@ -674,6 +761,7 @@
     $('allTempo').textContent = t;
     $('allTempo').hidden = !t;
     $('allSotto').textContent = so;
+    $('allEraSerie').hidden = !(e.stato === 'recupero' && e.riposo === 'nuovo');
   }
 
   function toccaTimer(sec) {
@@ -684,19 +772,27 @@
     const ora = Date.now();
     const durata = sec * 1000 * VELOCITA;
     const grazia = GRAZIA * 1000 * VELOCITA;
-    // tempo sbagliato? Se lo ritocchi entro 15 secondi cambia solo la durata, niente serie in più
-    if (e.stato === 'recupero' && ora - e.inizioRecupero < 15000) {
-      e.fineRecupero = e.inizioRecupero + durata;
-      e.fineAttesa = e.fineRecupero + grazia;
-    } else {
-      e.serie.push({ numero: e.numero, reps: e.reps });   // toccare il timer = serie fatta
-      e.reps = '';
-      if (!e.inizio) e.inizio = ora;                       // parte il cronometro dell'esercizio
+    const avvia = () => {
       e.inizioRecupero = ora;
       e.fineRecupero = ora + durata;
       e.fineAttesa = e.fineRecupero + grazia;
       e.stato = 'recupero';
       campoAttivo = null;
+    };
+    if (e.stato === 'recupero' && (e.riposo || ora - e.inizioRecupero < 15000)) {
+      // riposo tra esercizi, o tempo sbagliato (ritoccato entro 15 s): cambia solo la durata
+      e.fineRecupero = e.inizioRecupero + durata;
+      e.fineAttesa = e.fineRecupero + grazia;
+    } else if (e.stato === 'pronto' && !e.serie.length && !e.reps) {
+      // nessuna serie e nessuna ripetizione scritta: è il riposo prima di iniziare, non una serie
+      e.riposo = 'nuovo';
+      avvia();
+    } else {
+      e.serie.push({ numero: e.numero, reps: e.reps });   // toccare il timer = serie fatta
+      e.reps = '';
+      e.riposo = false;
+      if (!e.inizio) e.inizio = ora;                       // parte il cronometro dell'esercizio
+      avvia();
     }
     salva();
     programma();
@@ -721,9 +817,22 @@
   }
 
   function tick() {
-    const e = cur && cur.es;
-    if (!e) return;
+    if (!cur) return;
     const ora = Date.now();
+    const e = cur.es;
+    if (!e) {
+      // nell'elenco esercizi con un riposo in corso
+      const r = cur.riposo;
+      if (!r) return;
+      if (!r.vibrato && ora >= r.fineRecupero) {
+        r.vibrato = true;
+        if (ora - r.fineRecupero < 3000) vibra([400, 150, 400, 150, 400]);
+        salva();
+      }
+      if (statoDaTempi(r, ora) === 'allarme') continuaAllarme(ora);
+      aggiornaRiposoElenco();
+      return;
+    }
     if (e.stato === 'recupero' && ora >= e.fineRecupero) {
       e.stato = 'attesa';
       campoAttivo = 'reps';
@@ -738,10 +847,7 @@
       salva();
       renderAllenamento();
     }
-    if (e.stato === 'allarme') {
-      if (ora >= prossimaVibrazione) { vibra([700, 300, 700]); prossimaVibrazione = ora + 2500; }
-      if (ctx && allarmeFino - ora < 5000) programmaAllarme(Math.max(allarmeFino, ora + 100), 30);
-    }
+    if (e.stato === 'allarme') continuaAllarme(ora);
     aggiornaTempo();
   }
 
@@ -757,17 +863,31 @@
     renderAllenamento();
   }));
 
+  // il tempo partito senza ripetizioni era in realtà la prima serie
+  $('allEraSerie').addEventListener('click', () => {
+    const e = cur && cur.es;
+    if (!e || e.riposo !== 'nuovo') return;
+    e.serie.push({ numero: e.numero, reps: '' });
+    e.riposo = false;
+    e.inizio = e.inizioRecupero;
+    salva();
+    renderAllenamento();
+    apriSerie(e.serie.length - 1);
+  });
+
   // correggere una serie già salvata
   let serieInModifica = -1;
-  $('allFatte').addEventListener('click', ev => {
-    const b = ev.target.closest('[data-serie]');
-    if (!b) return;
-    serieInModifica = Number(b.dataset.serie);
-    const s = cur.es.serie[serieInModifica];
-    $('dsTitolo').textContent = 'Serie ' + (serieInModifica + 1);
+  function apriSerie(i) {
+    serieInModifica = i;
+    const s = cur.es.serie[i];
+    $('dsTitolo').textContent = 'Serie ' + (i + 1);
     $('dsNumero').value = s.numero;
     $('dsReps').value = s.reps;
     $('dlgSerie').showModal();
+  }
+  $('allFatte').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-serie]');
+    if (b) apriSerie(Number(b.dataset.serie));
   });
   $('dsSalva').addEventListener('click', () => {
     const s = cur.es.serie[serieInModifica];
@@ -787,13 +907,22 @@
 
   // ================= FINE ESERCIZIO =================
   let destinazione = 'scEsercizi';
+
+  // chiude l'esercizio in corso; un riposo da portare avanti continua nell'elenco esercizi
+  function lasciaEsercizio(riposo) {
+    cur.es = null;
+    campoAttivo = null;
+    cur.riposo = riposo;
+    if (!riposo) zittisci();
+  }
+
   function chiudiEsercizio(dest) {
     const e = cur.es;
     destinazione = dest;
-    if (!e.serie.length && !e.reps) {        // nessuna serie: esercizio scelto per sbaglio
-      zittisci();
-      cur.es = null;
-      campoAttivo = null;
+    if (!e.serie.length && !e.reps) {
+      // nessuna serie (esercizio scelto per sbaglio, o solo riposo): si esce senza finestra
+      const tieni = dest === 'scEsercizi' && ['recupero', 'attesa', 'allarme'].includes(e.stato);
+      lasciaEsercizio(tieni ? tempiDi(e) : null);
       vai(dest);
       return;
     }
@@ -803,7 +932,7 @@
     $('dxUltima').checked = daSalvare;
     $('dxAiuto').textContent = daSalvare
       ? 'Controlla i numeri dell\'ultima serie.'
-      : 'Sei ancora nel recupero: di solito l\'ultima serie è già salvata.';
+      : 'Sei ancora nel recupero: di solito l\'ultima serie è già salvata, e il tempo continua come riposo tra esercizi.';
     $('dxNumero').value = e.numero;
     $('dxReps').value = e.reps;
     $('dxNote').value = '';
@@ -838,13 +967,13 @@
   $('dxSalva').addEventListener('click', () => {
     const e = cur.es;
     const serie = serieFinali();
-    zittisci();
+    // se stai recuperando e cambi esercizio, quel tempo diventa il riposo tra esercizi
+    const riposo = destinazione === 'scEsercizi' && e.stato === 'recupero' ? tempiDi(e) : null;
     if (serie.length) {
       cur.sessione.esercizi.push({ nome: e.nome, serie, inizio: e.inizio, fine: Date.now(), note: $('dxNote').value.trim() });
       salvaSessione();
     }
-    cur.es = null;
-    campoAttivo = null;
+    lasciaEsercizio(riposo);
     $('dlgChiudi').close();
     vai(destinazione);
   });
@@ -864,23 +993,186 @@
              `<span class="muto">tutte: ${esc(e.serie.map(testoSerie).join(' · '))}</span><br>⏱ ${durata}</div>` +
              (e.note ? `<div class="privata">🔒 ${esc(e.note)}</div>` : '') + '</div>';
     }).join('') : '<div class="vuoto">Nessun esercizio salvato in questa lezione.</div>';
+    $('riepPdf').hidden = !lista.length;
+    $('riepPdfInfo').hidden = !lista.length;
+    if (lista.length) {
+      caricaPdf();
+      $('riepPdf').textContent = '📄 Invia il PDF' + (c ? ' a ' + primoNome(c.nome) : '');
+      const fatto = cur.sessione.inviato ? '✓ Inviato alle ' + orario(cur.sessione.inviato) + '. ' : '';
+      $('riepPdfInfo').textContent = fatto + (c && c.email
+        ? 'Si apre la condivisione: scegli Gmail. L\'email ' + c.email + ' è già copiata: tieni premuto su «A» e scegli Incolla.'
+        : 'Manca l\'email del cliente: la scrivi tu in Gmail, oppure aggiungila dalla matita ✎ nell\'elenco clienti.');
+    }
     $('riepChiudi').textContent = lista.length ? 'Chiudi la lezione' : 'Esci senza salvare';
   }
   $('riepIndietro').addEventListener('click', () => vai('scEsercizi'));
+  $('riepPdf').addEventListener('click', () => inviaPdf(cur.sessione));
   $('riepChiudi').addEventListener('click', () => {
     if (cur.sessione.esercizi.length) salvaSessione();
+    zittisci();
     cur = null;
     salva();
     rilasciaSchermo();
     mostra('scClienti');
   });
 
+  // ================= PDF PER IL CLIENTE =================
+  // la libreria (jsPDF) si carica solo quando serve; senza internet arriva dalla copia salvata
+  function caricaPdf() {
+    if (window.jspdf || $('libPdf')) return;
+    const s = document.createElement('script');
+    s.id = 'libPdf';
+    s.src = 'lib/jspdf.umd.min.js';
+    s.onerror = () => s.remove();
+    document.head.appendChild(s);
+  }
+
+  function creaPdf(sessione, nome) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const M = 18, LARGH = 210 - 2 * M;
+    const X = { es: M, serie: M + 84, max: M + 102, durata: M + 154 };
+    const INK = [21, 23, 27], MUTED = [94, 100, 108], ACCENTO = [217, 72, 15], LINEA = [210, 212, 208];
+    const data = new Date(sessione.inizio).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    let y = 20;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...ACCENTO);
+    doc.text('X TRAINING', M, y);
+    y += 11;
+    doc.setFontSize(20);
+    doc.setTextColor(...INK);
+    const titolo = doc.splitTextToSize('Allenamento di ' + nome, LARGH);
+    doc.text(titolo, M, y);
+    y += titolo.length * 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(...MUTED);
+    doc.text(data.charAt(0).toUpperCase() + data.slice(1), M, y);
+    y += 13;
+
+    const intestazione = () => {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...MUTED);
+      doc.text('ESERCIZIO', X.es, y);
+      doc.text('SERIE', X.serie, y);
+      doc.text('PESO MAX × RIPETIZIONI', X.max, y);
+      doc.text('DURATA', X.durata, y);
+      y += 3;
+      doc.setDrawColor(...INK);
+      doc.setLineWidth(0.4);
+      doc.line(M, y, M + LARGH, y);
+      y += 7;
+    };
+    intestazione();
+
+    let totale = 0;
+    for (const e of sessione.esercizi) {
+      const r = riassunto(e.serie);
+      totale += r.n;
+      doc.setFontSize(12);
+      const righeNome = doc.splitTextToSize(e.nome, 80);
+      doc.setFontSize(9);
+      const righeTutte = doc.splitTextToSize('Tutte: ' + e.serie.map(testoSerie).join('  ·  '), 80);
+      doc.setFontSize(11.5);
+      const righeMax = doc.splitTextToSize(r.testo, 50);
+      const fondoSinistra = righeNome.length * 5.2 + (righeTutte.length - 1) * 3.8;
+      const fondoDestra = (righeMax.length - 1) * 4.8;
+      const altezza = Math.max(fondoSinistra, fondoDestra) + 3;
+      if (y + altezza > 280) { doc.addPage(); y = 20; intestazione(); }
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(...INK);
+      doc.text(righeNome, X.es, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...MUTED);
+      doc.text(righeTutte, X.es, y + righeNome.length * 5.2);
+      doc.setFontSize(12);
+      doc.setTextColor(...INK);
+      doc.text(String(r.n), X.serie, y);
+      doc.text(e.inizio ? mmss(Math.floor((e.fine - e.inizio) / 1000)) : '-', X.durata, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11.5);
+      doc.text(righeMax, X.max, y);
+
+      y += altezza;
+      doc.setDrawColor(...LINEA);
+      doc.setLineWidth(0.2);
+      doc.line(M, y, M + LARGH, y);
+      y += 7;
+    }
+
+    const n = sessione.esercizi.length;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...INK);
+    doc.text('Totale: ' + n + (n === 1 ? ' esercizio' : ' esercizi') + ' · ' + totale + ' serie', M, y + 1);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
+    doc.text('Creato con X Training', M, 289);
+    return doc.output('blob');
+  }
+
+  async function inviaPdf(sessione) {
+    if (!window.jspdf) {
+      caricaPdf();
+      alert('Sto preparando il PDF: riprova tra un secondo.');
+      return;
+    }
+    const c = cliente(sessione.clienteId);
+    const nome = c ? c.nome : 'cliente';
+    const d = new Date(sessione.inizio);
+    const nomeFile = ('Allenamento ' + nome + ' ' + due(d.getDate()) + '-' + due(d.getMonth() + 1) + '-' + d.getFullYear())
+      .replace(/[\\/:*?"<>|]/g, '') + '.pdf';
+    const blob = creaPdf(sessione, nome);
+    const file = new File([blob], nomeFile, { type: 'application/pdf' });
+    // l'indirizzo non si può mettere da solo nella mail: lo copiamo, basta incollarlo
+    if (c && c.email && navigator.clipboard) navigator.clipboard.writeText(c.email).catch(() => {});
+    const quando = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'Allenamento del ' + quando,
+          text: 'Ciao ' + primoNome(nome) + ', ecco il riepilogo dell\'allenamento del ' + quando + '.',
+        });
+        segnaInviato(sessione.id);
+      } catch (err) {
+        if (err.name !== 'AbortError') alert('Non riesco ad aprire la condivisione: ' + err.message);
+      }
+    } else {
+      // senza condivisione (es. dal PC) il PDF si scarica
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeFile;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+  }
+
+  function segnaInviato(id) {
+    const t = Date.now();
+    const s = db.sessioni.find(x => x.id === id);
+    if (s) s.inviato = t;
+    if (cur && cur.sessione.id === id) cur.sessione.inviato = t;
+    salva();
+    if (!$('scRiepilogo').hidden) renderRiepilogo();
+  }
+
   // ================= RIPARTENZA E SFONDO =================
   // il primo tocco riattiva il motore audio (i telefoni lo richiedono)
   document.addEventListener('pointerdown', () => {
     const eraSpento = !ctx || ctx.state !== 'running';
     audio();
-    if (eraSpento && cur && cur.es) programma();
+    if (eraSpento && cur && (cur.es || cur.riposo)) programma();
     $('avvisoSuono').hidden = true;
   }, true);
 
@@ -901,6 +1193,8 @@
       campoAttivo = cur.es.stato === 'recupero' ? null : 'reps';
       fresco = true;
       if (['recupero', 'attesa', 'allarme'].includes(cur.es.stato)) $('avvisoSuono').hidden = false;
+    } else if (cur.riposo) {
+      $('avvisoSuono').hidden = false;
     }
     schermoAcceso();
     mostra(SCHERMI.includes(cur.schermo) ? cur.schermo : 'scEsercizi');
