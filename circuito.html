@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121418">
+<title>Circuito</title>
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #F2F2EF;
+    --card: #FFFFFF;
+    --ink: #15171B;
+    --muted: #5E646C;
+    --line: #DADCD8;
+    --accent: #D9480F;
+    --accent-soft: #FCE3D6;
+    --ok: #1F7A4F;
+    --ok-soft: #DDF2E7;
+    --ok-ink: #FFFFFF;
+    --btn: #15171B;
+    --btn-ink: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121418;
+      --card: #1C1F24;
+      --ink: #F1F2F4;
+      --muted: #9AA1AA;
+      --line: #2C3038;
+      --accent: #FF6A2C;
+      --accent-soft: #3A2217;
+      --ok: #4BC48B;
+      --ok-soft: #15321F;
+      --ok-ink: #0B1F14;
+      --btn: #F1F2F4;
+      --btn-ink: #121418;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: Verdana, Tahoma, sans-serif; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  .app { max-width: 560px; margin: 0 auto; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .schermo { display: flex; flex-direction: column; gap: 14px; min-height: calc(100dvh - 28px - env(safe-area-inset-bottom)); }
+  .barra { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+  .barra .destra { display: flex; gap: 8px; }
+  h1 { font-size: 20px; margin: 0; }
+  h1 b { color: var(--accent); }
+  h2 { font-size: 24px; margin: 0; }
+  .muto { color: var(--muted); font-size: 15px; margin: 0; }
+  .pulsante { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 14px;
+              font-size: 15px; font-weight: bold; min-height: 44px; white-space: nowrap; }
+  .link { background: none; border: 0; padding: 12px 8px; color: var(--accent); font-size: 16px; font-weight: bold; }
+  .grande { width: 100%; border: 0; border-radius: 18px; padding: 18px; font-size: 26px; font-weight: bold;
+            background: var(--btn); color: var(--btn-ink); min-height: 80px; }
+  .grande.ok { background: var(--ok); color: var(--ok-ink); min-height: 24vh; font-size: 40px; }
+  .grande.secondo { background: var(--card); color: var(--ink); border: 2px solid var(--line); }
+
+  .blocco { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  .blocco h3 { font-size: 15px; margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: .03em; }
+  .blocco p { font-size: 14px; margin: 2px 0 8px; color: var(--muted); }
+  .blocco ol { margin: 0; padding-left: 22px; }
+  .blocco li { padding: 3px 0; font-size: 16px; }
+  .blocco li b { white-space: nowrap; }
+
+  .progresso { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .progresso div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .chip { align-self: flex-start; background: var(--accent-soft); color: var(--accent); border-radius: 999px;
+          padding: 6px 14px; font-size: 16px; font-weight: bold; letter-spacing: .04em; }
+  .centro { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; text-align: center; }
+  .nome { font-size: 34px; font-weight: bold; line-height: 1.15; overflow-wrap: anywhere; }
+  .quanto { font-size: 44px; font-weight: bold; color: var(--accent); line-height: 1.1; }
+  .dettaglio { font-size: 16px; color: var(--muted); line-height: 1.4; }
+  .tempo { font-size: 96px; font-weight: bold; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: .02em; }
+  .recupero .tempo { font-size: 120px; color: var(--ok); }
+  .etichetta { font-size: 22px; font-weight: bold; color: var(--ok); letter-spacing: .06em; }
+  .prossimo { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-size: 22px; }
+  .prossimo small { display: block; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+  .prossimo b { color: var(--accent); }
+  .pausa-avviso { text-align: center; font-size: 22px; font-weight: bold; color: var(--accent); }
+  .fondo { display: flex; flex-direction: column; gap: 6px; }
+  .riga-link { display: flex; justify-content: space-between; }
+  .bollino-prova { background: #FFE08A; color: #3D2E00; border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: bold; text-align: center; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="bollinoProva" class="bollino-prova" hidden>MODALITÀ PROVA · tempi ×10 più veloci</div>
+
+  <!-- nessun circuito nel link -->
+  <section id="scVuoto" class="schermo" hidden>
+    <div class="barra"><h1>X Training · <b>Circuito</b></h1></div>
+    <div class="centro">
+      <p class="nome">Nessun circuito</p>
+      <p class="dettaglio">Il circuito si apre dal pulsante <b>▶️ Avvia</b> nel promemoria dell'allenamento di F.R.I.D.A.Y.</p>
+    </div>
+  </section>
+
+  <!-- anteprima -->
+  <section id="scInizio" class="schermo" hidden>
+    <div class="barra">
+      <h1>X Training · <b>Circuito</b></h1>
+      <button id="voce1" class="pulsante" type="button"></button>
+    </div>
+    <div>
+      <h2 id="titolo"></h2>
+      <p id="durata" class="muto"></p>
+    </div>
+    <div id="blocchi" class="fondo"></div>
+    <button id="provaVoce" class="pulsante" type="button">🔊 Prova la voce</button>
+    <div class="fondo">
+      <button id="riprendi" class="grande" type="button" hidden></button>
+      <button id="via" class="grande" type="button">▶️ Via</button>
+    </div>
+  </section>
+
+  <!-- durante -->
+  <section id="scGiro" class="schermo" hidden>
+    <div class="barra">
+      <strong id="contatore"></strong>
+      <div class="destra">
+        <button id="voce2" class="pulsante" type="button"></button>
+        <button id="pausa" class="pulsante" type="button">⏸ Pausa</button>
+      </div>
+    </div>
+    <div class="progresso"><div id="barraProgresso"></div></div>
+    <div id="chip" class="chip"></div>
+
+    <div id="vistaEs" class="centro">
+      <div id="esNome" class="nome"></div>
+      <div id="esQuanto" class="quanto"></div>
+      <div id="esTempo" class="tempo"></div>
+      <div id="esDettaglio" class="dettaglio"></div>
+    </div>
+
+    <div id="vistaRec" class="centro recupero">
+      <div class="etichetta">RECUPERO</div>
+      <div id="recTempo" class="tempo"></div>
+      <div class="prossimo"><small>Prossimo</small><span id="recProssimo"></span></div>
+    </div>
+
+    <div id="avvisoPausa" class="pausa-avviso" hidden>In pausa</div>
+    <div class="fondo">
+      <button id="fatto" class="grande ok" type="button">✅ Fatto</button>
+      <button id="salta" class="grande secondo" type="button">Salta il recupero ⏭</button>
+      <div class="riga-link">
+        <button id="indietro" class="link" type="button">↩ Indietro</button>
+        <button id="termina" class="link" type="button">Termina</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- fine -->
+  <section id="scFine" class="schermo" hidden>
+    <div class="barra"><h1>X Training · <b>Circuito</b></h1></div>
+    <div class="centro">
+      <div class="nome">Finito! 💪</div>
+      <div id="fineTempo" class="quanto"></div>
+      <div id="fineTitolo" class="dettaglio"></div>
+      <div class="dettaglio">Ricordati di toccare <b>✅ fatto</b> nel promemoria di F.R.I.D.A.Y.</div>
+    </div>
+    <button id="daCapo" class="grande secondo" type="button">Rifai da capo</button>
+  </section>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  // Il circuito arriva nel link, dopo il "#": lo scrive F.R.I.D.A.Y (allenamento.link_circuito)
+  // come JSON in base64. {t: titolo, k: chiave della sessione, b: blocchi}; un blocco è
+  // {g: giri, r: recupero tra esercizi, rg: recupero tra giri e dopo il blocco (secondi),
+  //  e: [[testo, quanto, secondi se a tempo (0 = a ripetizioni), serie]]}.
+  // Con ?prova nell'indirizzo i tempi vanno 10 volte più veloci.
+  const PROVA = new URLSearchParams(location.search).has('prova');
+  const VEL = PROVA ? 0.1 : 1;
+  const K_STATO = PROVA ? 'circuito-prova-stato' : 'circuito-stato';
+  const K_VOCE = 'circuito-voce';
+  const $ = id => document.getElementById(id);
+  $('bollinoProva').hidden = !PROVA;
+
+  // ================= IL CIRCUITO =================
+  function leggiCircuito() {
+    let s = location.hash.slice(1).replace(/-/g, '+').replace(/_/g, '/');
+    if (!s) return null;
+    while (s.length % 4) s += '=';
+    try {
+      const bytes = Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
+      const c = JSON.parse(new TextDecoder().decode(bytes));
+      return c && Array.isArray(c.b) && c.b.length ? c : null;
+    } catch (e) { return null; }
+  }
+
+  // "Trazioni alla sbarra, orizzontali o facilitate..." → nome da dire + dettaglio da leggere
+  function dividi(testo) {
+    const m = testo.match(/^([^,:(]+)(.*)$/);
+    return { nome: (m ? m[1] : testo).trim(), dettaglio: (m ? m[2] : '').replace(/^[\s,:]+/, '').trim() };
+  }
+
+  function passi(c) {
+    const fuori = [];
+    c.b.forEach((bl, bi) => {
+      for (let giro = 1; giro <= bl.g; giro++) {
+        const es = bl.e.filter(x => (x[3] || bl.g) >= giro);
+        es.forEach((x, ei) => {
+          const ultimoDelGiro = ei === es.length - 1;
+          const ultimoDelBlocco = ultimoDelGiro && giro === bl.g;
+          const ultimoDiTutti = ultimoDelBlocco && bi === c.b.length - 1;
+          fuori.push(Object.assign(dividi(x[0]), {
+            q: String(x[1] || ''), sec: Number(x[2]) || 0,
+            giro, giri: bl.g, blocco: bi + 1, blocchi: c.b.length, primoDelGiro: ei === 0,
+            // un esercizio solo = serie classiche (i salti); più esercizi = un circuito a giri
+            unita: bl.e.length > 1 ? 'Giro' : 'Serie', pezzo: bl.e.length > 1 ? 'Blocco' : 'Esercizio',
+            rec: ultimoDiTutti ? 0 : (!ultimoDelGiro ? bl.r : bl.rg) || 0,
+          }));
+        });
+      }
+    });
+    return fuori;
+  }
+
+  function aParole(s) {
+    const m = Math.floor(s / 60), r = s % 60;
+    if (!m) return `${r} secondi`;
+    const minuti = m === 1 ? '1 minuto' : `${m} minuti`;
+    return r ? `${minuti} e ${r}` : minuti;
+  }
+
+  function orologio(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  const c = leggiCircuito();
+  const P = c ? passi(c) : [];
+  let st = null;               // {i, fase: 'es'|'rec'|'fine', fine, pausa, inizio, finito}
+
+  function salva() {
+    try { localStorage.setItem(K_STATO, JSON.stringify(Object.assign({}, st, { h: location.hash }))); } catch (e) {}
+  }
+  function statoSalvato() {
+    try {
+      const s = JSON.parse(localStorage.getItem(K_STATO));
+      return s && s.h === location.hash && s.fase !== 'fine' && s.i < P.length
+        && Date.now() - s.inizio < 12 * 3600e3 ? s : null;
+    } catch (e) { return null; }
+  }
+
+  // ================= SUONO =================
+  // Come in X Training: i bip sono programmati in anticipo nel motore audio, agli orari
+  // giusti, così suonano puntuali anche se il telefono rallenta la pagina.
+  let ctx = null, suoni = [];
+  function audio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) ctx = new AC();
+    }
+    if (ctx && ctx.state !== 'running') ctx.resume();
+    return ctx;
+  }
+  function tono(quando, freq, durata, volume) {
+    if (!ctx || quando < Date.now() - 50) return;
+    const t = ctx.currentTime + Math.max(0, (quando - Date.now()) / 1000);
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(volume, t + 0.01);
+    g.gain.setValueAtTime(volume, t + durata - 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + durata);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + durata + 0.05);
+    const s = { osc, g };
+    suoni.push(s);
+    osc.onended = () => { g.disconnect(); suoni = suoni.filter(x => x !== s); };
+  }
+  function zittisci() {
+    suoni.forEach(s => { try { s.g.disconnect(); s.osc.stop(); } catch (e) {} });
+    suoni = [];
+  }
+  // 3-2-1 brevi e poi uno lungo e acuto quando il tempo è finito
+  function contoAllaRovescia(fine) {
+    zittisci();
+    [3000, 2000, 1000].forEach(d => tono(fine - d * VEL, 880, 0.12, 0.3));
+    tono(fine, 1319, 0.45, 0.35);
+  }
+  function vibra(schema) { if (navigator.vibrate) navigator.vibrate(schema); }
+
+  // ================= VOCE =================
+  let voceSi = true;
+  try { voceSi = localStorage.getItem(K_VOCE) !== 'no'; } catch (e) {}
+  let voceItaliana = null;
+  function scegliVoce() {
+    const v = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+    voceItaliana = v.find(x => /^it/i.test(x.lang) && x.localService) || v.find(x => /^it/i.test(x.lang)) || null;
+  }
+  if ('speechSynthesis' in window) { scegliVoce(); speechSynthesis.onvoiceschanged = scegliVoce; }
+  function parla(testo, anche) {
+    if ((!voceSi && !anche) || !('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(testo);
+    u.lang = 'it-IT';
+    if (voceItaliana) u.voice = voceItaliana;
+    u.rate = 1;
+    u.volume = 1;
+    speechSynthesis.speak(u);
+  }
+  function mostraVoce() {
+    $('voce1').textContent = voceSi ? '🔊 Voce sì' : '🔇 Voce no';
+    $('voce2').textContent = voceSi ? '🔊' : '🔇';
+  }
+  function cambiaVoce() {
+    voceSi = !voceSi;
+    try { localStorage.setItem(K_VOCE, voceSi ? 'si' : 'no'); } catch (e) {}
+    if (!voceSi && window.speechSynthesis) speechSynthesis.cancel();
+    mostraVoce();
+  }
+
+  // ================= SCHERMO SEMPRE ACCESO =================
+  let wakeLock = null, vuoleSchermo = false, chiedendo = false;
+  async function schermoAcceso() {
+    vuoleSchermo = true;
+    if (!('wakeLock' in navigator) || wakeLock || chiedendo || document.visibilityState !== 'visible') return;
+    chiedendo = true;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) {}
+    chiedendo = false;
+  }
+  function rilasciaSchermo() {
+    vuoleSchermo = false;
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && vuoleSchermo) schermoAcceso();
+  });
+
+  // ================= IL GIRO =================
+  function vai(i) {                         // comincia l'esercizio i
+    const p = P[i];
+    st.i = i; st.fase = 'es'; st.pausa = null;
+    st.fine = p.sec ? Date.now() + p.sec * 1000 * VEL : null;
+    salva();
+    zittisci();
+    if (st.fine) contoAllaRovescia(st.fine);
+    let frase = p.primoDelGiro && p.giri > 1 ? `${p.unita} ${p.giro} di ${p.giri}. ` : '';
+    frase += p.q ? `${p.nome}, ${p.q}.` : `${p.nome}.`;
+    if (p.sec) frase += ' Via!';
+    parla(frase);
+    vibra(150);
+    disegna();
+  }
+
+  function finito() {                       // tasto Fatto, o fine del tempo
+    const p = P[st.i];
+    if (st.i >= P.length - 1) return fine();
+    if (p.rec > 0) {
+      st.fase = 'rec'; st.pausa = null;
+      st.fine = Date.now() + p.rec * 1000 * VEL;
+      salva();
+      contoAllaRovescia(st.fine);
+      const n = P[st.i + 1];
+      parla(`Recupero ${aParole(p.rec)}. Prossimo: ${n.nome}${n.q ? ', ' + n.q : ''}.`);
+      disegna();
+    } else {
+      vai(st.i + 1);                        // corsa → camminata: si passa subito
+    }
+  }
+
+  function fine() {
+    st.fase = 'fine'; st.fine = null; st.pausa = null; st.finito = Date.now();
+    salva();
+    zittisci();
+    [0, 180, 360].forEach(d => tono(Date.now() + 60 + d, 1047 + d, 0.2, 0.3));
+    parla('Circuito finito. Bravo!');
+    vibra([200, 100, 200]);
+    rilasciaSchermo();
+    disegna();
+  }
+
+  function pausa() {
+    if (!st || !st.fine) return;
+    if (st.pausa == null) {
+      st.pausa = st.fine - Date.now();
+      zittisci();
+      if (window.speechSynthesis) speechSynthesis.cancel();
+    } else {
+      st.fine = Date.now() + st.pausa;
+      st.pausa = null;
+      contoAllaRovescia(st.fine);
+    }
+    salva();
+    disegna();
+  }
+
+  function comincia(salvato) {
+    audio();
+    schermoAcceso();
+    if (salvato) {
+      st = salvato;
+      if (st.fase === 'rec') {
+        const resta = st.pausa != null ? st.pausa : st.fine - Date.now();
+        if (resta > 0) {
+          st.fine = Date.now() + resta; st.pausa = null;
+          salva(); contoAllaRovescia(st.fine);
+          parla(`Riprendiamo. Recupero, poi ${P[st.i + 1].nome}.`);
+          return disegna();
+        }
+        return vai(st.i + 1);
+      }
+      return vai(st.i);                     // l'esercizio interrotto si rifà
+    }
+    st = { i: 0, fase: 'es', fine: null, pausa: null, inizio: Date.now() };
+    vai(0);
+  }
+
+  // ================= DISEGNO =================
+  const SCHERMI = ['scVuoto', 'scInizio', 'scGiro', 'scFine'];
+  function mostra(nome) { SCHERMI.forEach(id => { $(id).hidden = id !== nome; }); }
+
+  function disegnaInizio() {
+    $('titolo').textContent = c.t || 'Allenamento';
+    const secondi = P.reduce((tot, p) => tot + (p.sec || 40) + p.rec, 0);   // a ripetizioni: circa 40"
+    $('durata').textContent = `${P.length} esercizi da fare · circa ${Math.max(1, Math.round(secondi / 60))} minuti`;
+    const box = $('blocchi');
+    box.textContent = '';
+    c.b.forEach((b, bi) => {
+      const d = document.createElement('div');
+      d.className = 'blocco';
+      const h = document.createElement('h3');
+      const giri = b.e.length > 1 ? (b.g > 1 ? `${b.g} giri` : '1 giro') : (b.g > 1 ? `${b.g} serie` : '1 serie');
+      h.textContent = (c.b.length > 1 ? `${b.e.length > 1 ? 'Blocco' : 'Esercizio'} ${bi + 1} · ` : '') + giri;
+      const recuperi = document.createElement('p');
+      recuperi.textContent = [b.e.length > 1 && b.r ? `${b.r}" tra un esercizio e l'altro` : '',
+                              b.rg ? `${b.rg}" di recupero ${b.e.length > 1 ? 'tra i giri' : 'tra le serie'}` : '']
+        .filter(Boolean).join(' · ') || 'senza recuperi';
+      const ol = document.createElement('ol');
+      b.e.forEach(x => {
+        const li = document.createElement('li');
+        li.append(dividi(x[0]).nome + ' — ');
+        const q = document.createElement('b');
+        q.textContent = x[1];
+        li.append(q);
+        ol.append(li);
+      });
+      d.append(h, recuperi, ol);
+      box.append(d);
+    });
+    const salvato = statoSalvato();
+    $('riprendi').hidden = !salvato;
+    $('via').textContent = salvato ? 'Ricomincia da capo' : '▶️ Via';
+    $('via').className = salvato ? 'grande secondo' : 'grande';
+    if (salvato) {
+      const p = P[salvato.i];
+      $('riprendi').textContent = `▶️ Riprendi: ${p.nome}` + (p.giri > 1 ? ` (giro ${p.giro} di ${p.giri})` : '');
+    }
+  }
+
+  function disegna() {
+    mostraVoce();
+    if (!c) return mostra('scVuoto');
+    if (!st) { disegnaInizio(); return mostra('scInizio'); }
+    if (st.fase === 'fine') {
+      const minuti = Math.max(1, Math.round((st.finito - st.inizio) / 60000));
+      $('fineTempo').textContent = minuti === 1 ? '1 minuto' : `${minuti} minuti`;
+      $('fineTitolo').textContent = c.t || '';
+      return mostra('scFine');
+    }
+    mostra('scGiro');
+    const p = P[st.i];
+    const rec = st.fase === 'rec';
+    $('contatore').textContent = `${st.i + 1} di ${P.length}`;
+    $('barraProgresso').style.width = `${Math.round(((st.i + (rec ? 1 : 0)) / P.length) * 100)}%`;
+    const giro = rec ? P[st.i + 1] : p;
+    $('chip').textContent = (giro.giri > 1 ? `${giro.unita} ${giro.giro} di ${giro.giri}` : `${giro.unita} unic${giro.unita === 'Giro' ? 'o' : 'a'}`).toUpperCase()
+      + (giro.blocchi > 1 ? ` · ${giro.pezzo} ${giro.blocco} di ${giro.blocchi}`.toUpperCase() : '');
+    $('vistaEs').hidden = rec;
+    $('vistaRec').hidden = !rec;
+    $('fatto').hidden = rec;
+    $('salta').hidden = !rec;
+    $('pausa').hidden = !st.fine;
+    $('pausa').textContent = st.pausa != null ? '▶️ Riprendi' : '⏸ Pausa';
+    $('avvisoPausa').hidden = st.pausa == null;
+    $('indietro').hidden = !rec && st.i === 0;
+    if (!rec) {
+      $('esNome').textContent = p.nome;
+      $('esQuanto').textContent = p.q;
+      $('esDettaglio').textContent = p.dettaglio;
+      $('esTempo').hidden = !p.sec;
+    } else {
+      const n = P[st.i + 1];
+      $('recProssimo').textContent = '';
+      $('recProssimo').append(n.nome + (n.q ? ' — ' : ''));
+      if (n.q) {
+        const b = document.createElement('b');
+        b.textContent = n.q;
+        $('recProssimo').append(b);
+      }
+    }
+    aggiornaTempi();
+  }
+
+  function aggiornaTempi() {
+    if (!st || !st.fine) return;
+    const resta = st.pausa != null ? st.pausa : st.fine - Date.now();
+    $(st.fase === 'rec' ? 'recTempo' : 'esTempo').textContent = orologio(resta);
+  }
+
+  setInterval(() => {
+    if (!st || st.fase === 'fine' || !st.fine || st.pausa != null) return;
+    if (Date.now() >= st.fine) {
+      if (st.fase === 'es') finito();
+      else vai(st.i + 1);
+    } else {
+      aggiornaTempi();
+    }
+  }, 200);
+
+  // ================= TASTI =================
+  $('via').onclick = () => { try { localStorage.removeItem(K_STATO); } catch (e) {} comincia(null); };
+  $('riprendi').onclick = () => comincia(statoSalvato());
+  $('provaVoce').onclick = () => { audio(); parla('Ciao Simone. Questa è la voce del circuito.', true); tono(Date.now() + 2600, 1319, 0.3, 0.3); };
+  $('voce1').onclick = cambiaVoce;
+  $('voce2').onclick = cambiaVoce;
+  $('fatto').onclick = () => { if (st && st.fase === 'es') finito(); };
+  $('salta').onclick = () => { if (st && st.fase === 'rec') vai(st.i + 1); };
+  $('pausa').onclick = pausa;
+  $('indietro').onclick = () => {
+    if (!st) return;
+    if (st.fase === 'rec') vai(st.i);        // rifai l'esercizio appena segnato
+    else if (st.i > 0) vai(st.i - 1);
+  };
+  $('termina').onclick = () => { if (confirm('Terminare il circuito adesso?')) fine(); };
+  $('daCapo').onclick = () => { st = null; try { localStorage.removeItem(K_STATO); } catch (e) {} disegna(); };
+  window.addEventListener('hashchange', () => location.reload());
+
+  window.circuito = { passi: P, stato: () => st };   // per le prove automatiche
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});   // anche senza rete
+  disegna();
+})();
+</script>
+</body>
+</html>
