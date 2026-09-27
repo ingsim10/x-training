@@ -65,7 +65,7 @@
   .blocco p { font-size: 14px; margin: 2px 0 8px; color: var(--muted); }
   .blocco ol { margin: 0; padding-left: 22px; }
   .blocco li { padding: 3px 0; font-size: 16px; }
-  .blocco li b { white-space: nowrap; }
+  .blocco li span { color: var(--muted); font-size: 14px; }
 
   .progresso { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
   .progresso div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
@@ -74,7 +74,9 @@
   .centro { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; text-align: center; }
   .nome { font-size: 34px; font-weight: bold; line-height: 1.15; overflow-wrap: anywhere; }
   .quanto { font-size: 44px; font-weight: bold; color: var(--accent); line-height: 1.1; }
+  .peso { font-size: 20px; font-weight: bold; }
   .dettaglio { font-size: 16px; color: var(--muted); line-height: 1.4; }
+  .poi { font-size: 16px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
   .tempo { font-size: 96px; font-weight: bold; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: .02em; }
   .recupero .tempo { font-size: 120px; color: var(--ok); }
   .etichetta { font-size: 22px; font-weight: bold; color: var(--ok); letter-spacing: .06em; }
@@ -86,8 +88,6 @@
   .riga-link { display: flex; justify-content: space-between; }
   .avviso { margin: 0; background: var(--card); border: 2px solid var(--accent); border-radius: 12px;
             padding: 12px 14px; font-size: 16px; line-height: 1.45; }
-  .lato { align-self: center; background: var(--ink); color: var(--bg); border-radius: 999px;
-          padding: 6px 22px; font-size: 26px; font-weight: bold; letter-spacing: .08em; }
   .bollino-prova { background: #FFE08A; color: #3D2E00; border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: bold; text-align: center; }
 </style>
 </head>
@@ -95,19 +95,19 @@
 <div class="app">
   <div id="bollinoProva" class="bollino-prova" hidden>MODALITÀ PROVA · tempi ×10 più veloci</div>
 
-  <!-- nessun circuito nel link -->
+  <!-- nessun allenamento nel link -->
   <section id="scVuoto" class="schermo" hidden>
     <div class="barra"><h1>X Training · <b>Circuito</b></h1></div>
     <div class="centro">
-      <p class="nome">Nessun circuito</p>
-      <p class="dettaglio">Il circuito si apre dal pulsante <b>▶️ Avvia</b> nel promemoria dell'allenamento di F.R.I.D.A.Y.</p>
+      <p class="nome">Nessun allenamento</p>
+      <p class="dettaglio">Si apre dal pulsante <b>▶️ Avvia</b> nel promemoria dell'allenamento di F.R.I.D.A.Y.</p>
     </div>
   </section>
 
   <!-- anteprima -->
   <section id="scInizio" class="schermo" hidden>
     <div class="barra">
-      <h1>X Training · <b>Circuito</b></h1>
+      <h1>X Training · <b class="modo">Circuito</b></h1>
       <button id="voce1" class="pulsante" type="button"></button>
     </div>
     <div>
@@ -137,14 +137,15 @@
 
     <div id="vistaEs" class="centro">
       <div id="esNome" class="nome"></div>
-      <div id="esLato" class="lato" hidden></div>
       <div id="esQuanto" class="quanto"></div>
+      <div id="esPeso" class="peso" hidden></div>
       <div id="esTempo" class="tempo"></div>
       <div id="esDettaglio" class="dettaglio"></div>
+      <div id="esPoi" class="poi" hidden></div>
     </div>
 
     <div id="vistaRec" class="centro recupero">
-      <div id="etRec" class="etichetta">RECUPERO</div>
+      <div class="etichetta">RECUPERO</div>
       <div id="recTempo" class="tempo"></div>
       <div class="prossimo"><small>Prossimo</small><span id="recProssimo"></span></div>
     </div>
@@ -162,7 +163,7 @@
 
   <!-- fine -->
   <section id="scFine" class="schermo" hidden>
-    <div class="barra"><h1>X Training · <b>Circuito</b></h1></div>
+    <div class="barra"><h1>X Training · <b class="modo">Circuito</b></h1></div>
     <div class="centro">
       <div class="nome">Finito! 💪</div>
       <div id="fineTempo" class="quanto"></div>
@@ -176,19 +177,20 @@
 <script>
 (() => {
   'use strict';
-  // Il circuito arriva nel link, dopo il "#": lo scrive F.R.I.D.A.Y (allenamento.link_circuito)
-  // come JSON in base64. {t: titolo, k: chiave della sessione, b: blocchi}; un blocco è
-  // {g: giri, r: recupero tra esercizi, rg: recupero tra giri e dopo il blocco (secondi),
-  //  e: [[testo, quanto, secondi se a tempo (0 = a ripetizioni), serie, 1 se prima destro poi sinistro]]}.
+  // L'allenamento arriva nel link, dopo il "#": lo scrive F.R.I.D.A.Y (allenamento.link_circuito)
+  // come JSON in base64. {t: titolo, k: chiave della sessione, m: "lezione" o niente, b: blocchi};
+  // un blocco è {g: giri, r: recupero tra esercizi, rg: recupero tra giri e dopo il blocco (secondi),
+  //  e: [[testo, quanto, secondi se a tempo (0 = a ripetizioni), serie, kg dell'ultima volta o null]]}.
+  // m = "lezione" (il mini durante la lezione di Stefano): serie una dopo l'altra, niente timer di
+  // recupero (lo decide la lezione), voce spenta di partenza (Simone, 27/09).
   // Con ?prova nell'indirizzo i tempi vanno 10 volte più veloci.
   const PROVA = new URLSearchParams(location.search).has('prova');
   const VEL = PROVA ? 0.1 : 1;
   const K_STATO = PROVA ? 'circuito-prova-stato' : 'circuito-stato';
-  const K_VOCE = 'circuito-voce';
   const $ = id => document.getElementById(id);
   $('bollinoProva').hidden = !PROVA;
 
-  // ================= IL CIRCUITO =================
+  // ================= L'ALLENAMENTO =================
   function leggiCircuito() {
     let s = location.hash.slice(1).replace(/-/g, '+').replace(/_/g, '/');
     if (!s) return null;
@@ -206,9 +208,6 @@
     return { nome: (m ? m[1] : testo).trim(), dettaglio: (m ? m[2] : '').replace(/^[\s,:]+/, '').trim() };
   }
 
-  const CAMBIO_LATO = 5;      // destro → sinistro: 5" per prepararsi, niente recupero (Simone, 27/09)
-  const perLato = q => String(q || '').replace(/\s*per (lato|gamba)\s*$/i, '');
-
   function passi(c) {
     const fuori = [];
     c.b.forEach((bl, bi) => {
@@ -218,17 +217,13 @@
           const ultimoDelGiro = ei === es.length - 1;
           const ultimoDelBlocco = ultimoDelGiro && giro === bl.g;
           const ultimoDiTutti = ultimoDelBlocco && bi === c.b.length - 1;
-          const lati = x[4] ? ['destro', 'sinistro'] : [''];
-          lati.forEach((lato, li) => {
-            const cambio = li < lati.length - 1;
-            fuori.push(Object.assign(dividi(x[0]), {
-              q: String(x[1] || ''), qLato: lato ? perLato(x[1]) : String(x[1] || ''), sec: Number(x[2]) || 0,
-              lato, cambio, giro, giri: bl.g, blocco: bi + 1, blocchi: c.b.length, primoDelGiro: ei === 0 && li === 0,
-              // un esercizio solo = serie classiche (i salti); più esercizi = un circuito a giri
-              unita: bl.e.length > 1 ? 'Giro' : 'Serie', pezzo: bl.e.length > 1 ? 'Blocco' : 'Esercizio',
-              rec: cambio ? CAMBIO_LATO : ultimoDiTutti ? 0 : (!ultimoDelGiro ? bl.r : bl.rg) || 0,
-            }));
-          });
+          fuori.push(Object.assign(dividi(x[0]), {
+            q: String(x[1] || ''), sec: Number(x[2]) || 0, kg: x[4] == null ? null : Number(x[4]),
+            giro, giri: bl.g, blocco: bi + 1, blocchi: c.b.length, primoDelGiro: ei === 0,
+            // un esercizio solo = serie classiche (salti, lezione); più esercizi = un circuito a giri
+            unita: bl.e.length > 1 ? 'Giro' : 'Serie', pezzo: bl.e.length > 1 ? 'Blocco' : 'Esercizio',
+            rec: ultimoDiTutti ? 0 : (!ultimoDelGiro ? bl.r : bl.rg) || 0,
+          }));
         });
       }
     });
@@ -247,9 +242,14 @@
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   }
 
+  const kg = x => `${String(x).replace('.', ',')} kg`;
+  const pezzoGiro = p => p.giri > 1 ? `${p.unita} ${p.giro} di ${p.giri}` : '';
+
   const c = leggiCircuito();
+  const LEZIONE = !!(c && c.m === 'lezione');
   const P = c ? passi(c) : [];
   let st = null;               // {i, fase: 'es'|'rec'|'fine', fine, pausa, inizio, finito}
+  document.querySelectorAll('.modo').forEach(el => { el.textContent = LEZIONE ? 'In lezione' : 'Circuito'; });
 
   function salva() {
     try { localStorage.setItem(K_STATO, JSON.stringify(Object.assign({}, st, { h: location.hash }))); } catch (e) {}
@@ -263,9 +263,9 @@
   }
 
   // ================= SUONO =================
-  // Come in X Training: i bip sono programmati in anticipo nel motore audio, agli orari
-  // giusti, così suonano puntuali anche se il telefono rallenta la pagina.
-  let ctx = null, suoni = [];
+  // Come in X Training: i bip (e la voce) sono programmati in anticipo nel motore audio, agli
+  // orari giusti, così suonano puntuali anche se il telefono rallenta la pagina.
+  let ctx = null, suoni = [], turno = 0;
   function audio() {
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -273,6 +273,11 @@
     }
     if (ctx && ctx.state !== 'running') ctx.resume();
     return ctx;
+  }
+  function tieni(sorgente, g) {
+    const s = { osc: sorgente, g };
+    suoni.push(s);
+    sorgente.onended = () => { g.disconnect(); suoni = suoni.filter(x => x !== s); };
   }
   function tono(quando, freq, durata, volume) {
     if (!ctx || quando < Date.now() - 50) return;
@@ -288,13 +293,21 @@
     osc.connect(g).connect(ctx.destination);
     osc.start(t);
     osc.stop(t + durata + 0.05);
-    const s = { osc, g };
-    suoni.push(s);
-    osc.onended = () => { g.disconnect(); suoni = suoni.filter(x => x !== s); };
+    tieni(osc, g);
+  }
+  function suonaFrase(buf, t) {
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    src.connect(g).connect(ctx.destination);
+    src.start(t);
+    tieni(src, g);
   }
   function zittisci() {
+    turno++;                                    // una frase ancora da preparare non parte più
     suoni.forEach(s => { try { s.g.disconnect(); s.osc.stop(); } catch (e) {} });
     suoni = [];
+    if (window.speechSynthesis) speechSynthesis.cancel();
   }
   // 3-2-1 brevi e poi uno lungo e acuto quando il tempo è finito
   function contoAllaRovescia(fine) {
@@ -305,50 +318,100 @@
   function vibra(schema) { if (navigator.vibrate) navigator.vibrate(schema); }
 
   // ================= VOCE =================
-  let voceSi = true;
-  try { voceSi = localStorage.getItem(K_VOCE) !== 'no'; } catch (e) {}
+  // Frasi registrate al PC con la voce italiana di Windows (strumenti/genera-voce.js) e suonate
+  // nel motore audio come i bip: così parla anche dentro Telegram, dove la voce del telefono non
+  // c'è (provato il 27/09). Una frase è fatta di pezzi ("Giro 2 di 3", "Goblet squat", "8"): se
+  // manca un pezzo (un esercizio nuovo non ancora registrato) prova la voce del telefono, e se
+  // nemmeno quella c'è dice i pezzi registrati.
+  const K_VOCE = LEZIONE ? 'circuito-voce-lezione' : 'circuito-voce';
+  const chiave = t => String(t).toLowerCase().replace(/[.,:;!?"()]/g, ' ').replace(/\s+/g, ' ').trim();
+  let voceSi = !LEZIONE;                        // in lezione parte spenta: c'è il cliente
+  try { const v = localStorage.getItem(K_VOCE); if (v) voceSi = v === 'si'; } catch (e) {}
+  let indice = {};
+  const scaricati = new Map(), decodificati = new Map();
+  const indiceCaricato = fetch('voce/indice.json')
+    .then(r => r.ok ? r.json() : {}).then(i => { indice = i || {}; }).catch(() => {});
+  function scarica(k) {
+    if (!scaricati.has(k)) {
+      scaricati.set(k, fetch('voce/' + indice[k]).then(r => {
+        if (!r.ok) throw new Error('voce ' + r.status);
+        return r.arrayBuffer();
+      }));
+    }
+    return scaricati.get(k);
+  }
+  function decodifica(k) {
+    if (!decodificati.has(k)) decodificati.set(k, scarica(k).then(ab => ctx.decodeAudioData(ab.slice(0))));
+    return decodificati.get(k);
+  }
+  function frasiDelCircuito() {
+    const f = new Set(['Via', 'Prossimo', 'Finito, bravo', 'Riprendiamo']);
+    P.forEach(p => {
+      f.add(pezzoGiro(p)); f.add(p.nome); f.add(p.q);
+      if (p.rec) f.add('Recupero ' + aParole(p.rec));
+    });
+    return [...f].filter(Boolean);
+  }
+  // si scaricano subito, così quando serve sono già sul telefono
+  indiceCaricato.then(() => frasiDelCircuito().forEach(t => {
+    const k = chiave(t);
+    if (indice[k]) scarica(k).catch(() => {});
+  }));
+
   let voceItaliana = null;
   function scegliVoce() {
     const v = window.speechSynthesis ? speechSynthesis.getVoices() : [];
     voceItaliana = v.find(x => /^it/i.test(x.lang) && x.localService) || v.find(x => /^it/i.test(x.lang)) || null;
   }
   if ('speechSynthesis' in window) { scegliVoce(); speechSynthesis.onvoiceschanged = scegliVoce; }
-  // esito (solo per la prova): 'partita', 'errore: …' o 'manca'
-  function parla(testo, anche, esito) {
-    if ((!voceSi && !anche) || !('speechSynthesis' in window)) { if (esito) esito('manca'); return; }
-    speechSynthesis.cancel();
+  function sintesi(testo, esito) {
     const u = new SpeechSynthesisUtterance(testo);
     u.lang = 'it-IT';
     if (voceItaliana) u.voice = voceItaliana;
-    u.rate = 1;
-    u.volume = 1;
     if (esito) {
-      u.onstart = () => esito('partita');
+      u.onstart = () => esito('telefono');
       u.onerror = e => esito('errore: ' + (e.error || '?'));
     }
     // Chrome: una frase detta subito dopo cancel() a volte si perde
     setTimeout(() => { speechSynthesis.resume(); speechSynthesis.speak(u); }, 80);
   }
-  // Il browser interno di Telegram (e le app che mostrano pagine web) di solito non ha la voce
-  const DENTRO_UN_APP = /; wv\)|Telegram/i.test(navigator.userAgent);
+
+  // esito (solo per la prova): 'registrata', 'in parte', 'telefono', 'manca' o 'errore: …'
+  async function parla(pezzi, anche, esito) {
+    pezzi = pezzi.filter(Boolean);
+    if ((!voceSi && !anche) || !pezzi.length) return;
+    const mio = ++turno;
+    await indiceCaricato;
+    const chiavi = pezzi.map(chiave);
+    const registrate = chiavi.filter(k => indice[k]);
+    const telefono = window.speechSynthesis && speechSynthesis.getVoices().length > 0;
+    if (registrate.length < chiavi.length && telefono) return sintesi(pezzi.join('. '), esito);
+    if (!registrate.length || !audio()) { if (esito) esito('manca'); return; }
+    try {
+      const frasi = await Promise.all(registrate.map(decodifica));
+      if (mio !== turno) return;                // nel frattempo è cambiato qualcosa
+      let t = ctx.currentTime + 0.05;
+      frasi.forEach(b => { suonaFrase(b, t); t += b.duration + 0.12; });
+      if (esito) esito(registrate.length < chiavi.length ? 'in parte' : 'registrata');
+    } catch (e) {
+      if (telefono) sintesi(pezzi.join('. '), esito);
+      else if (esito) esito('errore: ' + e.message);
+    }
+  }
+
   function provaVoce() {
     audio();
-    tono(Date.now() + 3200, 1319, 0.3, 0.3);
-    const voci = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-    const italiane = voci.filter(v => /^it/i.test(v.lang)).length;
+    tono(Date.now() + 3500, 1319, 0.3, 0.3);
     const scrivi = t => { $('esitoVoce').hidden = false; $('esitoVoce').textContent = t; };
-    let partita = false;
-    scrivi(`Sto provando… (voci del telefono: ${voci.length}, italiane: ${italiane}). Tra 3 secondi anche un bip.`);
-    parla('Ciao Simone. Questa è la voce del circuito.', true, e => {
-      if (e === 'partita') { partita = true; scrivi('✅ La voce funziona.'); }
-      else scrivi(`Voce non partita (${e}). Voci del telefono: ${voci.length}, italiane: ${italiane}.`);
+    let arrivato = false;
+    scrivi('Sto provando… tra poco anche un bip.');
+    parla(['Ciao Simone, questa è la voce del circuito'], true, e => {
+      arrivato = true;
+      if (e === 'registrata') scrivi('🔊 Parte la voce registrata. Se non la senti ma senti il bip, dillo a Claude.');
+      else if (e === 'telefono') scrivi('✅ Parla la voce del telefono.');
+      else scrivi(`❌ Voce non partita (${e}). Dillo a Claude.`);
     });
-    setTimeout(() => {
-      if (partita) return;
-      scrivi(DENTRO_UN_APP
-        ? '❌ Niente voce: sei nel browser di Telegram, che la voce non ce l\'ha. Tocca il menu in alto (⋮) → apri nel browser / in Chrome, poi riprova da lì.'
-        : `❌ Niente voce in questo browser (voci del telefono: ${voci.length}, italiane: ${italiane}). Dillo a Claude.`);
-    }, 3000);
+    setTimeout(() => { if (!arrivato) scrivi('❌ La voce non si è caricata (serve internet la prima volta). Dillo a Claude.'); }, 4000);
   }
   function mostraVoce() {
     $('voce1').textContent = voceSi ? '🔊 Voce sì' : '🔇 Voce no';
@@ -357,7 +420,7 @@
   function cambiaVoce() {
     voceSi = !voceSi;
     try { localStorage.setItem(K_VOCE, voceSi ? 'si' : 'no'); } catch (e) {}
-    if (!voceSi && window.speechSynthesis) speechSynthesis.cancel();
+    if (!voceSi) zittisci();
     mostraVoce();
   }
 
@@ -389,11 +452,7 @@
     salva();
     zittisci();
     if (st.fine) contoAllaRovescia(st.fine);
-    let frase = p.primoDelGiro && p.giri > 1 ? `${p.unita} ${p.giro} di ${p.giri}. ` : '';
-    if (p.lato === 'sinistro') frase = p.qLato ? `Sinistro, ${p.qLato}.` : 'Sinistro.';
-    else frase += (p.q ? `${p.nome}, ${p.q}.` : `${p.nome}.`) + (p.lato ? ' Destro.' : '');
-    if (p.sec) frase += ' Via!';
-    parla(frase);
+    parla([p.primoDelGiro && pezzoGiro(p), p.nome, p.q, p.sec && 'Via']);
     vibra(150);
     disegna();
   }
@@ -407,10 +466,10 @@
       salva();
       contoAllaRovescia(st.fine);
       const n = P[st.i + 1];
-      parla(p.cambio ? 'Cambia lato.' : `Recupero ${aParole(p.rec)}. Prossimo: ${n.nome}${n.q ? ', ' + n.q : ''}.`);
+      parla(['Recupero ' + aParole(p.rec), 'Prossimo', n.nome, n.q]);
       disegna();
     } else {
-      vai(st.i + 1);                        // corsa → camminata: si passa subito
+      vai(st.i + 1);                        // corsa → camminata, o la serie dopo in lezione
     }
   }
 
@@ -419,7 +478,7 @@
     salva();
     zittisci();
     [0, 180, 360].forEach(d => tono(Date.now() + 60 + d, 1047 + d, 0.2, 0.3));
-    parla('Circuito finito. Bravo!');
+    parla(['Finito, bravo']);
     vibra([200, 100, 200]);
     rilasciaSchermo();
     disegna();
@@ -430,7 +489,6 @@
     if (st.pausa == null) {
       st.pausa = st.fine - Date.now();
       zittisci();
-      if (window.speechSynthesis) speechSynthesis.cancel();
     } else {
       st.fine = Date.now() + st.pausa;
       st.pausa = null;
@@ -450,7 +508,7 @@
         if (resta > 0) {
           st.fine = Date.now() + resta; st.pausa = null;
           salva(); contoAllaRovescia(st.fine);
-          parla(`Riprendiamo. Recupero, poi ${P[st.i + 1].nome}.`);
+          parla(['Riprendiamo']);
           return disegna();
         }
         return vai(st.i + 1);
@@ -467,8 +525,12 @@
 
   function disegnaInizio() {
     $('titolo').textContent = c.t || 'Allenamento';
-    const secondi = P.reduce((tot, p) => tot + (p.sec || 40) + p.rec, 0);   // a ripetizioni: circa 40"
-    $('durata').textContent = `${P.length} esercizi da fare · circa ${Math.max(1, Math.round(secondi / 60))} minuti`;
+    if (LEZIONE) {
+      $('durata').textContent = `${P.length} serie, una dopo l'altra · il recupero lo decide la lezione`;
+    } else {
+      const secondi = P.reduce((tot, p) => tot + (p.sec || 40) + p.rec, 0);   // a ripetizioni: circa 40"
+      $('durata').textContent = `${P.length} esercizi da fare · circa ${Math.max(1, Math.round(secondi / 60))} minuti`;
+    }
     const box = $('blocchi');
     box.textContent = '';
     c.b.forEach((b, bi) => {
@@ -478,9 +540,10 @@
       const giri = b.e.length > 1 ? (b.g > 1 ? `${b.g} giri` : '1 giro') : (b.g > 1 ? `${b.g} serie` : '1 serie');
       h.textContent = (c.b.length > 1 ? `${b.e.length > 1 ? 'Blocco' : 'Esercizio'} ${bi + 1} · ` : '') + giri;
       const recuperi = document.createElement('p');
-      recuperi.textContent = [b.e.length > 1 && b.r ? `${b.r}" tra un esercizio e l'altro` : '',
-                              b.rg ? `${b.rg}" di recupero ${b.e.length > 1 ? 'tra i giri' : 'tra le serie'}` : '']
-        .filter(Boolean).join(' · ') || 'senza recuperi';
+      recuperi.textContent = LEZIONE ? 'recupero: quando la lezione lo permette'
+        : [b.e.length > 1 && b.r ? `${b.r}" tra un esercizio e l'altro` : '',
+           b.rg ? `${b.rg}" di recupero ${b.e.length > 1 ? 'tra i giri' : 'tra le serie'}` : '']
+          .filter(Boolean).join(' · ') || 'senza recuperi';
       const ol = document.createElement('ol');
       b.e.forEach(x => {
         const li = document.createElement('li');
@@ -488,7 +551,11 @@
         const q = document.createElement('b');
         q.textContent = x[1];
         li.append(q);
-        if (x[4]) li.append(' · prima destro, poi sinistro');
+        if (x[4] != null) {
+          const u = document.createElement('span');
+          u.textContent = ` · ultima volta ${kg(x[4])}`;
+          li.append(u);
+        }
         ol.append(li);
       });
       d.append(h, recuperi, ol);
@@ -496,11 +563,11 @@
     });
     const salvato = statoSalvato();
     $('riprendi').hidden = !salvato;
-    $('via').textContent = salvato ? 'Ricomincia da capo' : '▶️ Via';
+    $('via').textContent = salvato ? 'Ricomincia da capo' : (LEZIONE ? '▶️ Inizia' : '▶️ Via');
     $('via').className = salvato ? 'grande secondo' : 'grande';
     if (salvato) {
       const p = P[salvato.i];
-      $('riprendi').textContent = `▶️ Riprendi: ${p.nome}` + (p.giri > 1 ? ` (giro ${p.giro} di ${p.giri})` : '');
+      $('riprendi').textContent = `▶️ Riprendi: ${p.nome}` + (p.giri > 1 ? ` (${p.unita.toLowerCase()} ${p.giro} di ${p.giri})` : '');
     }
   }
 
@@ -516,10 +583,11 @@
     }
     mostra('scGiro');
     const p = P[st.i];
+    const n = P[st.i + 1];
     const rec = st.fase === 'rec';
     $('contatore').textContent = `${st.i + 1} di ${P.length}`;
     $('barraProgresso').style.width = `${Math.round(((st.i + (rec ? 1 : 0)) / P.length) * 100)}%`;
-    const giro = rec ? P[st.i + 1] : p;
+    const giro = rec ? n : p;
     $('chip').textContent = (giro.giri > 1 ? `${giro.unita} ${giro.giro} di ${giro.giri}` : `${giro.unita} unic${giro.unita === 'Giro' ? 'o' : 'a'}`).toUpperCase()
       + (giro.blocchi > 1 ? ` · ${giro.pezzo} ${giro.blocco} di ${giro.blocchi}`.toUpperCase() : '');
     $('vistaEs').hidden = rec;
@@ -532,23 +600,23 @@
     $('indietro').hidden = !rec && st.i === 0;
     if (!rec) {
       $('esNome').textContent = p.nome;
-      $('esLato').hidden = !p.lato;
-      $('esLato').textContent = p.lato.toUpperCase();
-      $('esQuanto').textContent = p.qLato;
+      $('esQuanto').textContent = p.q;
+      $('esPeso').hidden = p.kg == null;
+      $('esPeso').textContent = p.kg == null ? '' : `ultima volta ${kg(p.kg)}`;
       $('esDettaglio').textContent = p.dettaglio;
       $('esTempo').hidden = !p.sec;
+      // in lezione non c'è la schermata del recupero: il "dopo" si vede qui
+      $('esPoi').hidden = !(LEZIONE && n);
+      $('esPoi').textContent = LEZIONE && n ? `Dopo: ${n.nome} — ${n.q}` + (n.giri > 1 ? ` (serie ${n.giro} di ${n.giri})` : '') : '';
     } else {
-      const n = P[st.i + 1];
-      $('etRec').textContent = p.cambio ? 'CAMBIO LATO' : 'RECUPERO';
-      $('salta').textContent = p.cambio ? 'Pronto ⏭' : 'Salta il recupero ⏭';
-      const [prima, dopo] = p.cambio ? ['Sinistro', n.qLato] : [n.nome, n.q];
       $('recProssimo').textContent = '';
-      $('recProssimo').append(prima + (dopo ? ' — ' : ''));
-      if (dopo) {
+      $('recProssimo').append(n.nome + (n.q ? ' — ' : ''));
+      if (n.q) {
         const b = document.createElement('b');
-        b.textContent = dopo;
+        b.textContent = n.q;
         $('recProssimo').append(b);
       }
+      if (n.kg != null) $('recProssimo').append(` · ${kg(n.kg)}`);
     }
     aggiornaTempi();
   }
@@ -583,11 +651,11 @@
     if (st.fase === 'rec') vai(st.i);        // rifai l'esercizio appena segnato
     else if (st.i > 0) vai(st.i - 1);
   };
-  $('termina').onclick = () => { if (confirm('Terminare il circuito adesso?')) fine(); };
+  $('termina').onclick = () => { if (confirm('Terminare adesso?')) fine(); };
   $('daCapo').onclick = () => { st = null; try { localStorage.removeItem(K_STATO); } catch (e) {} disegna(); };
   window.addEventListener('hashchange', () => location.reload());
 
-  window.circuito = { passi: P, stato: () => st };   // per le prove automatiche
+  window.circuito = { passi: P, stato: () => st, frasi: frasiDelCircuito, chiave };   // per le prove automatiche
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});   // anche senza rete
   disegna();
 })();
