@@ -1,6 +1,6 @@
 // X Training: fa funzionare l'app anche senza internet in palestra.
 // Prima prova a scaricare la versione nuova (max 3 secondi), altrimenti usa la copia salvata.
-const CACHE = 'xtraining-v6';
+const CACHE = 'xtraining-v7';
 const FILE = ['./', './index.html', './circuito.html', './manifest.json', './icon-192.png', './icon-512.png',
               './lib/jspdf.umd.min.js'];
 

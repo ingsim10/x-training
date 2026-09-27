@@ -178,11 +178,14 @@
 (() => {
   'use strict';
   // L'allenamento arriva nel link, dopo il "#": lo scrive F.R.I.D.A.Y (allenamento.link_circuito)
-  // come JSON in base64. {t: titolo, k: chiave della sessione, m: "lezione" o niente, b: blocchi};
+  // come JSON in base64. {t: titolo, k: chiave della sessione, m: dove si è, b: blocchi};
   // un blocco è {g: giri, r: recupero tra esercizi, rg: recupero tra giri e dopo il blocco (secondi),
   //  e: [[testo, quanto, secondi se a tempo (0 = a ripetizioni), serie, kg dell'ultima volta o null]]}.
-  // m = "lezione" (il mini durante la lezione di Stefano): serie una dopo l'altra, niente timer di
-  // recupero (lo decide la lezione), voce spenta di partenza (Simone, 27/09).
+  // m (Simone, 27/09: i circuiti solo a casa, in palestra non può sudare troppo):
+  //   "lezione" = mentre lavora: serie una dopo l'altra, niente timer, il recupero lo decide la lezione;
+  //   "serie"   = fuori casa ma libero: serie classiche col recupero a tempo;
+  //   niente    = a casa: circuiti.
+  // Fuori casa la voce parte spenta (c'è gente); si accende col tasto e se lo ricorda.
   // Con ?prova nell'indirizzo i tempi vanno 10 volte più veloci.
   const PROVA = new URLSearchParams(location.search).has('prova');
   const VEL = PROVA ? 0.1 : 1;
@@ -246,10 +249,13 @@
   const pezzoGiro = p => p.giri > 1 ? `${p.unita} ${p.giro} di ${p.giri}` : '';
 
   const c = leggiCircuito();
-  const LEZIONE = !!(c && c.m === 'lezione');
+  const MODO = (c && c.m) || '';
+  const LEZIONE = MODO === 'lezione';
   const P = c ? passi(c) : [];
   let st = null;               // {i, fase: 'es'|'rec'|'fine', fine, pausa, inizio, finito}
-  document.querySelectorAll('.modo').forEach(el => { el.textContent = LEZIONE ? 'In lezione' : 'Circuito'; });
+  document.querySelectorAll('.modo').forEach(el => {
+    el.textContent = { lezione: 'In lezione', serie: 'Serie' }[MODO] || 'Circuito';
+  });
 
   function salva() {
     try { localStorage.setItem(K_STATO, JSON.stringify(Object.assign({}, st, { h: location.hash }))); } catch (e) {}
@@ -323,9 +329,9 @@
   // c'è (provato il 27/09). Una frase è fatta di pezzi ("Giro 2 di 3", "Goblet squat", "8"): se
   // manca un pezzo (un esercizio nuovo non ancora registrato) prova la voce del telefono, e se
   // nemmeno quella c'è dice i pezzi registrati.
-  const K_VOCE = LEZIONE ? 'circuito-voce-lezione' : 'circuito-voce';
+  const K_VOCE = 'circuito-voce' + (MODO ? '-' + MODO : '');
   const chiave = t => String(t).toLowerCase().replace(/[.,:;!?"()]/g, ' ').replace(/\s+/g, ' ').trim();
-  let voceSi = !LEZIONE;                        // in lezione parte spenta: c'è il cliente
+  let voceSi = !MODO;                           // fuori casa parte spenta: c'è il cliente, c'è gente
   try { const v = localStorage.getItem(K_VOCE); if (v) voceSi = v === 'si'; } catch (e) {}
   let indice = {};
   const scaricati = new Map(), decodificati = new Map();
@@ -529,7 +535,7 @@
       $('durata').textContent = `${P.length} serie, una dopo l'altra · il recupero lo decide la lezione`;
     } else {
       const secondi = P.reduce((tot, p) => tot + (p.sec || 40) + p.rec, 0);   // a ripetizioni: circa 40"
-      $('durata').textContent = `${P.length} esercizi da fare · circa ${Math.max(1, Math.round(secondi / 60))} minuti`;
+      $('durata').textContent = `${P.length} ${MODO ? 'serie' : 'esercizi da fare'} · circa ${Math.max(1, Math.round(secondi / 60))} minuti`;
     }
     const box = $('blocchi');
     box.textContent = '';
