@@ -218,7 +218,7 @@
 </div>
 
 <script>
-(() => {
+(async () => {
   'use strict';
   // L'allenamento arriva nel link, dopo il "#": lo scrive F.R.I.D.A.Y (allenamento.link_circuito)
   // come JSON in base64. {t: titolo, k: chiave della sessione, m: dove si è, b: blocchi};
@@ -247,12 +247,20 @@
   $('bollinoProva').hidden = !PROVA;
 
   // ================= L'ALLENAMENTO =================
-  function leggiCircuito() {
-    let s = location.hash.slice(1).replace(/-/g, '+').replace(/_/g, '/');
+  // Dal 30/09 il bot lo manda compresso (una "z" davanti): col test del salto il link del sabato
+  // arrivava a 1.363 caratteri, troppi per stare tranquilli con Telegram.
+  async function leggiCircuito() {
+    let s = location.hash.slice(1);
+    const compresso = s.startsWith('z');
+    s = (compresso ? s.slice(1) : s).replace(/-/g, '+').replace(/_/g, '/');
     if (!s) return null;
     while (s.length % 4) s += '=';
     try {
-      const bytes = Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
+      let bytes = Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
+      if (compresso) {
+        const flusso = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+        bytes = new Uint8Array(await new Response(flusso).arrayBuffer());
+      }
       const c = JSON.parse(new TextDecoder().decode(bytes));
       return c && Array.isArray(c.b) && c.b.length ? c : null;
     } catch (e) { return null; }
@@ -275,10 +283,12 @@
           const ultimoDiTutti = ultimoDelBlocco && bi === c.b.length - 1;
           const q = String(x[1] || '');
           const numero = q.match(/\d+/);
+          // il test del salto (30/09) si segna in centimetri: "cm, il migliore di tre prove"
+          const u = /\bcm\b/.test(q) ? 'cm' : /second/i.test(q) ? 'sec' : 'rip';
           fuori.push(Object.assign(dividi(x[0]), {
             testo: x[0], q, sec: Number(x[2]) || 0, kg: x[4] == null ? null : Number(x[4]),
             // le ripetizioni (o i secondi) della scheda: "10 per lato" → 10, "poche ripetizioni" → null
-            pr: numero ? Number(numero[0]) : null, u: /second/i.test(q) ? 'sec' : 'rip',
+            pr: numero && u !== 'cm' ? Number(numero[0]) : null, u,
             giro, giri: bl.g, blocco: bi + 1, blocchi: c.b.length, primoDelGiro: ei === 0,
             // un esercizio solo = serie classiche (salti, lezione); più esercizi = un circuito a giri
             unita: bl.e.length > 1 ? 'Giro' : 'Serie', pezzo: bl.e.length > 1 ? 'Blocco' : 'Esercizio',
@@ -306,7 +316,7 @@
   const kg = x => `${String(x).replace('.', ',')} kg`;
   const pezzoGiro = p => p.giri > 1 ? `${p.unita} ${p.giro} di ${p.giri}` : '';
 
-  const c = leggiCircuito();
+  const c = await leggiCircuito();
   const MODO = (c && c.m) || '';
   const LEZIONE = MODO === 'lezione';
   const CORSA = !!(c && /-corsa$/.test(c.k || ''));
@@ -399,7 +409,7 @@
     serie.forEach(([r, p], i) => {
       if (i && p !== peso) { chiudi(); gruppo = []; }
       peso = p;
-      gruppo.push(r == null ? '?' : u === 'sec' ? `${r}"` : String(r));
+      gruppo.push(r == null ? '?' : u === 'sec' ? `${r}"` : u === 'cm' ? `${r} cm` : String(r));
     });
     chiudi();
     return pezzi.join(' · ');
@@ -830,11 +840,13 @@
       $('esTempo').hidden = !p.sec;
       $('registra').hidden = !registrabile(p);
       if (registrabile(p)) {
-        $('rEtichetta').textContent = p.u === 'sec' ? 'Secondi' : 'Ripetizioni';
+        $('rEtichetta').textContent = { sec: 'Secondi', cm: 'Centimetri' }[p.u] || 'Ripetizioni';
+        $('kgEtichetta').parentElement.hidden = p.u === 'cm';     // il test non ha peso
+        $('rMeno').hidden = $('rPiu').hidden = p.u === 'cm';      // i centimetri si scrivono
         if (document.activeElement !== $('rValore')) $('rValore').value = st.cur.r == null ? '' : st.cur.r;
         if (document.activeElement !== $('kgValore')) $('kgValore').value = scriviKg(st.cur.kg);
       }
-      const classiche = registrabile(p) && p.unita === 'Serie';
+      const classiche = registrabile(p) && p.unita === 'Serie' && p.u !== 'cm';   // il test si fa una volta
       $('rigaSerie').hidden = !classiche;
       $('ultimaSerie').hidden = !(classiche && n && n.blocco === p.blocco);
       // in lezione non c'è la schermata del recupero: il "dopo" si vede qui

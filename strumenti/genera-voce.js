@@ -25,7 +25,7 @@ function aParole(s) {
   return r ? `${minuti} e ${r}` : minuti;
 }
 // come deve pronunciarle Elsa, quando la parola scritta la inganna (solo la voce, non la chiave)
-const PRONUNCIA = [[/\bdead bug\b/i, 'ded bag'], [/\bbird dog\b/i, 'berd dog']];
+const PRONUNCIA = [[/\bdead bug\b/i, 'ded bag'], [/\bbird dog\b/i, 'berd dog'], [/\bcm\b/i, 'centimetri']];
 
 const argomenti = process.argv.slice(2);
 const tutto = argomenti.includes('--tutto');
