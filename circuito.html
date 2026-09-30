@@ -88,6 +88,25 @@
   .riga-link { display: flex; justify-content: space-between; }
   .avviso { margin: 0; background: var(--card); border: 2px solid var(--accent); border-radius: 12px;
             padding: 12px 14px; font-size: 16px; line-height: 1.45; }
+  .avviso { white-space: pre-line; }
+  .avviso.bene { border-color: var(--ok); }
+
+  /* ripetizioni e peso della serie (30/09) */
+  .registra { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; text-align: left; }
+  .campo { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; }
+  .etichetta-campo { font-size: 14px; color: var(--muted); font-weight: bold; margin-bottom: 4px; }
+  .riga-campo { display: flex; align-items: center; gap: 6px; }
+  .tondo { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--line);
+           background: var(--bg); font-size: 26px; font-weight: bold; line-height: 1; padding: 0; }
+  .numero { width: 100%; min-width: 0; height: 48px; border: 2px solid var(--line); border-radius: 10px;
+            background: var(--bg); color: var(--ink); font: bold 28px Verdana, Tahoma, sans-serif;
+            text-align: center; padding: 0 4px; }
+  .numero:focus { outline: none; border-color: var(--accent); }
+  .unita { font-size: 16px; color: var(--muted); font-weight: bold; }
+  .riga-serie { display: flex; justify-content: center; gap: 18px; }
+  .riepilogo { margin: 0; padding-left: 20px; }
+  .riepilogo li { padding: 4px 0; font-size: 16px; line-height: 1.35; }
+  .riepilogo b { color: var(--accent); }
   .bollino-prova { background: #FFE08A; color: #3D2E00; border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: bold; text-align: center; }
 </style>
 </head>
@@ -115,6 +134,7 @@
       <p id="durata" class="muto"></p>
     </div>
     <div id="blocchi" class="fondo"></div>
+    <p id="giaMandato" class="avviso bene" hidden></p>
     <button id="provaVoce" class="pulsante" type="button">🔊 Prova la voce</button>
     <p id="esitoVoce" class="avviso" hidden></p>
     <div class="fondo">
@@ -141,6 +161,27 @@
       <div id="esPeso" class="peso" hidden></div>
       <div id="esTempo" class="tempo"></div>
       <div id="esDettaglio" class="dettaglio"></div>
+      <div id="registra" class="registra" hidden>
+        <div class="campo">
+          <div id="rEtichetta" class="etichetta-campo">Ripetizioni</div>
+          <div class="riga-campo">
+            <button id="rMeno" class="tondo" type="button" aria-label="Una in meno">−</button>
+            <input id="rValore" class="numero" type="text" inputmode="numeric" autocomplete="off" aria-labelledby="rEtichetta">
+            <button id="rPiu" class="tondo" type="button" aria-label="Una in più">+</button>
+          </div>
+        </div>
+        <div class="campo">
+          <div id="kgEtichetta" class="etichetta-campo">Peso</div>
+          <div class="riga-campo">
+            <input id="kgValore" class="numero" type="text" inputmode="decimal" placeholder="—" autocomplete="off" aria-labelledby="kgEtichetta">
+            <span class="unita">kg</span>
+          </div>
+        </div>
+      </div>
+      <div id="rigaSerie" class="riga-serie" hidden>
+        <button id="piuSerie" class="link" type="button">＋ 1 serie</button>
+        <button id="ultimaSerie" class="link" type="button">Questa è l'ultima</button>
+      </div>
       <div id="esPoi" class="poi" hidden></div>
     </div>
 
@@ -168,9 +209,11 @@
       <div class="nome">Finito! 💪</div>
       <div id="fineTempo" class="quanto"></div>
       <div id="fineTitolo" class="dettaglio"></div>
-      <div class="dettaglio">Ricordati di toccare <b>✅ fatto</b> nel promemoria di F.R.I.D.A.Y.</div>
     </div>
-    <button id="daCapo" class="grande secondo" type="button">Rifai da capo</button>
+    <div id="fineRiepilogo" class="blocco" hidden></div>
+    <p id="esitoManda" class="avviso" hidden></p>
+    <button id="manda" class="grande" type="button">📤 Manda a F.R.I.D.A.Y</button>
+    <button id="daCapo" class="link" type="button">Rifai da capo</button>
   </section>
 </div>
 
@@ -187,6 +230,16 @@
   //   niente    = a casa: circuiti.
   // Fuori casa la voce parte spenta (c'è gente); si accende col tasto e se lo ricorda.
   // Con ?prova nell'indirizzo i tempi vanno 10 volte più veloci.
+  //
+  // Serie per serie (Simone, 30/09: "devo poter riferire più facilmente i pesi e le ripetizioni"):
+  // ogni serie mostra ripetizioni (quelle della scheda) e peso (quello di prima, se no l'ultima
+  // volta) già scritti; se è andata così basta Fatto, se no si corregge. "+ 1 serie" e "Questa è
+  // l'ultima" cambiano il numero delle serie (solo nelle serie classiche, non nei circuiti a giri).
+  // Alla fine "Manda a F.R.I.D.A.Y" spedisce tutto alla casella del server (assistente-personale/
+  // casella.py), che salva, segna la sessione fatta come il ✅ e risponde su Telegram. Il link
+  // porta la firma del bot (f): senza, la casella non accetta. Con ?prova la casella risponde e
+  // basta: niente salvato, niente messaggio.
+  const CASELLA = 'https://lezioni.qrconnect.it/friday/serie';
   const PROVA = new URLSearchParams(location.search).has('prova');
   const VEL = PROVA ? 0.1 : 1;
   const K_STATO = PROVA ? 'circuito-prova-stato' : 'circuito-stato';
@@ -220,12 +273,17 @@
           const ultimoDelGiro = ei === es.length - 1;
           const ultimoDelBlocco = ultimoDelGiro && giro === bl.g;
           const ultimoDiTutti = ultimoDelBlocco && bi === c.b.length - 1;
+          const q = String(x[1] || '');
+          const numero = q.match(/\d+/);
           fuori.push(Object.assign(dividi(x[0]), {
-            q: String(x[1] || ''), sec: Number(x[2]) || 0, kg: x[4] == null ? null : Number(x[4]),
+            testo: x[0], q, sec: Number(x[2]) || 0, kg: x[4] == null ? null : Number(x[4]),
+            // le ripetizioni (o i secondi) della scheda: "10 per lato" → 10, "poche ripetizioni" → null
+            pr: numero ? Number(numero[0]) : null, u: /second/i.test(q) ? 'sec' : 'rip',
             giro, giri: bl.g, blocco: bi + 1, blocchi: c.b.length, primoDelGiro: ei === 0,
             // un esercizio solo = serie classiche (salti, lezione); più esercizi = un circuito a giri
             unita: bl.e.length > 1 ? 'Giro' : 'Serie', pezzo: bl.e.length > 1 ? 'Blocco' : 'Esercizio',
-            rec: ultimoDiTutti ? 0 : (!ultimoDelGiro ? bl.r : bl.rg) || 0,
+            rec: ultimoDiTutti ? 0 : (!ultimoDelGiro ? bl.r : bl.rg) || 0, rg: bl.rg || 0,
+            fatto: null,                            // {r, kg} quando tocca Fatto
           }));
         });
       }
@@ -251,8 +309,10 @@
   const c = leggiCircuito();
   const MODO = (c && c.m) || '';
   const LEZIONE = MODO === 'lezione';
-  const P = c ? passi(c) : [];
-  let st = null;               // {i, fase: 'es'|'rec'|'fine', fine, pausa, inizio, finito}
+  const CORSA = !!(c && /-corsa$/.test(c.k || ''));
+  // P cambia con "+ 1 serie" e "Questa è l'ultima": sta dentro lo stato salvato (st.P)
+  let P = c ? passi(c) : [];
+  let st = null;               // {i, fase: 'es'|'rec'|'fine', fine, pausa, inizio, finito, P, cur, mandato}
   document.querySelectorAll('.modo').forEach(el => {
     el.textContent = { lezione: 'In lezione', serie: 'Serie' }[MODO] || 'Circuito';
   });
@@ -260,12 +320,124 @@
   function salva() {
     try { localStorage.setItem(K_STATO, JSON.stringify(Object.assign({}, st, { h: location.hash }))); } catch (e) {}
   }
-  function statoSalvato() {
+  function letto() {
     try {
       const s = JSON.parse(localStorage.getItem(K_STATO));
-      return s && s.h === location.hash && s.fase !== 'fine' && s.i < P.length
-        && Date.now() - s.inizio < 12 * 3600e3 ? s : null;
+      return s && s.h === location.hash ? s : null;
     } catch (e) { return null; }
+  }
+  // da riprendere: un allenamento a metà (12 ore), o finito ma non ancora mandato (3 giorni)
+  function statoSalvato() {
+    const s = letto();
+    if (!s) return null;
+    if (s.fase === 'fine') return !s.mandato && Date.now() - s.inizio < 72 * 3600e3 ? s : null;
+    return s.i < (s.P || P).length && Date.now() - s.inizio < 12 * 3600e3 ? s : null;
+  }
+
+  // ================= RIPETIZIONI E PESO =================
+  const registrabile = p => !CORSA && !p.sec;       // a tempo col timer: si segna da solo
+  // quello che la serie propone: se già fatta i suoi numeri, se no le ripetizioni della scheda
+  // (o quelle della serie prima, se la scheda non ha un numero) e il peso della serie prima
+  // (o dell'ultima volta)
+  function valoriDi(i) {
+    const p = P[i];
+    if (p.fatto) return { r: p.fatto.r, kg: p.fatto.kg };
+    let prima = null;
+    for (let j = i - 1; j >= 0 && !prima; j--) if (P[j].testo === p.testo && P[j].fatto) prima = P[j].fatto;
+    return { r: p.pr != null ? p.pr : (prima ? prima.r : null), kg: prima ? prima.kg : p.kg };
+  }
+  function segnaPasso(i) {
+    const p = P[i];
+    if (CORSA) return;
+    p.fatto = registrabile(p) ? { r: st.cur.r, kg: st.cur.kg } : { r: p.pr != null ? p.pr : p.sec, kg: null };
+  }
+  const numeroKg = t => {
+    const x = parseFloat(String(t).replace(',', '.'));
+    return x > 0 && x < 1000 ? Math.round(x * 100) / 100 : null;
+  };
+  const scriviKg = x => x == null ? '' : String(x).replace('.', ',');
+
+  // "+ 1 serie": una serie in più dello stesso esercizio, subito dopo questa
+  function piuSerie() {
+    const i = st.i, p = P[i];
+    const nuovo = Object.assign({}, p, { giro: p.giro + 1, fatto: null, rec: p.rec });
+    p.rec = p.rg;                                   // tra una serie e l'altra
+    P.splice(i + 1, 0, nuovo);
+    P.forEach((x, j) => { if (x.blocco === p.blocco) { x.giri += 1; if (j > i + 1) x.giro += 1; } });
+    salva();
+    disegna();
+  }
+  // "Questa è l'ultima": via le serie che restano di questo esercizio
+  function ultimaSerie() {
+    const i = st.i, p = P[i];
+    let j = i + 1;
+    while (j < P.length && P[j].blocco === p.blocco) j++;
+    if (j === i + 1) return;
+    p.rec = P[j - 1].rec;                           // il recupero che c'era dopo l'esercizio
+    P.splice(i + 1, j - i - 1);
+    P.forEach(x => { if (x.blocco === p.blocco) x.giri = p.giro; });
+    salva();
+    disegna();
+  }
+
+  // ================= MANDA A F.R.I.D.A.Y =================
+  // le serie fatte, esercizio per esercizio: [{n: testo, u: 'rip'|'sec', s: [[ripetizioni, kg]]}]
+  function raccolta() {
+    const m = new Map();
+    P.forEach(p => {
+      if (!p.fatto) return;
+      if (!m.has(p.testo)) m.set(p.testo, { n: p.testo, u: p.u, s: [] });
+      m.get(p.testo).s.push([p.fatto.r, p.fatto.kg]);
+    });
+    return [...m.values()];
+  }
+  // come serie_a_parole di allenamento.py: "16 kg × 8, 8 · 18 kg × 6"
+  function serieAParole(serie, u) {
+    const pezzi = [];
+    let gruppo = [], peso;
+    const chiudi = () => { if (gruppo.length) pezzi.push((peso != null ? kg(peso) + ' × ' : '') + gruppo.join(', ')); };
+    serie.forEach(([r, p], i) => {
+      if (i && p !== peso) { chiudi(); gruppo = []; }
+      peso = p;
+      gruppo.push(r == null ? '?' : u === 'sec' ? `${r}"` : String(r));
+    });
+    chiudi();
+    return pezzi.join(' · ');
+  }
+  function esitoManda(testo, bene) {
+    $('esitoManda').hidden = !testo;
+    $('esitoManda').textContent = testo || '';
+    $('esitoManda').className = 'avviso' + (bene ? ' bene' : '');
+  }
+  let mandando = false, erroreManda = false;
+  async function manda() {
+    if (!st || st.fase !== 'fine' || mandando) return;
+    mandando = true;
+    erroreManda = false;
+    $('manda').disabled = true;
+    esitoManda('Sto mandando…');
+    try {
+      const r = await fetch(CASELLA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },    // testo semplice: niente domanda preventiva del browser
+        body: JSON.stringify({ v: 1, k: c.k, f: c.f, t: c.t, prova: PROVA || undefined, es: CORSA ? [] : raccolta() }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.errore || `risposta ${r.status}`);
+      if (j.prova) {
+        esitoManda('PROVA: niente salvato, nessun messaggio. F.R.I.D.A.Y avrebbe scritto:\n' + j.testo, true);
+      } else {
+        st.mandato = Date.now();
+        salva();
+        esitoManda('✅ Arrivato. F.R.I.D.A.Y ti ha risposto su Telegram.', true);
+      }
+      $('manda').hidden = true;
+    } catch (e) {
+      erroreManda = true;
+      esitoManda(`❌ Non partito (${e.message}). Controlla internet e riprova: le serie restano qui.`);
+    }
+    mandando = false;
+    $('manda').disabled = false;
   }
 
   // ================= SUONO =================
@@ -451,10 +623,11 @@
   });
 
   // ================= IL GIRO =================
-  function vai(i) {                         // comincia l'esercizio i
+  function vai(i, riprendi) {               // comincia l'esercizio i (riprendi: tiene i numeri già toccati)
     const p = P[i];
     st.i = i; st.fase = 'es'; st.pausa = null;
     st.fine = p.sec ? Date.now() + p.sec * 1000 * VEL : null;
+    if (!(riprendi && st.cur)) st.cur = valoriDi(i);
     salva();
     zittisci();
     if (st.fine) contoAllaRovescia(st.fine);
@@ -465,6 +638,7 @@
 
   function finito() {                       // tasto Fatto, o fine del tempo
     const p = P[st.i];
+    segnaPasso(st.i);
     if (st.i >= P.length - 1) return fine();
     if (p.rec > 0) {
       st.fase = 'rec'; st.pausa = null;
@@ -505,10 +679,16 @@
   }
 
   function comincia(salvato) {
+    if (salvato && salvato.fase === 'fine') {   // finito ma non mandato: si torna alla fine
+      st = salvato;
+      P = st.P || P;
+      return disegna();
+    }
     audio();
     schermoAcceso();
     if (salvato) {
       st = salvato;
+      if (st.P) P = st.P; else st.P = P;        // uno stato di prima del 30/09 non ha P
       if (st.fase === 'rec') {
         const resta = st.pausa != null ? st.pausa : st.fine - Date.now();
         if (resta > 0) {
@@ -519,9 +699,10 @@
         }
         return vai(st.i + 1);
       }
-      return vai(st.i);                     // l'esercizio interrotto si rifà
+      return vai(st.i, true);               // l'esercizio interrotto si rifà
     }
-    st = { i: 0, fase: 'es', fine: null, pausa: null, inizio: Date.now() };
+    P = passi(c);
+    st = { i: 0, fase: 'es', fine: null, pausa: null, inizio: Date.now(), P };
     vai(0);
   }
 
@@ -571,9 +752,18 @@
     $('riprendi').hidden = !salvato;
     $('via').textContent = salvato ? 'Ricomincia da capo' : (LEZIONE ? '▶️ Inizia' : '▶️ Via');
     $('via').className = salvato ? 'grande secondo' : 'grande';
-    if (salvato) {
-      const p = P[salvato.i];
+    if (salvato && salvato.fase === 'fine') {
+      $('riprendi').textContent = '📤 Finito e non mandato: mandalo a F.R.I.D.A.Y';
+    } else if (salvato) {
+      const p = (salvato.P || P)[salvato.i];
       $('riprendi').textContent = `▶️ Riprendi: ${p.nome}` + (p.giri > 1 ? ` (${p.unita.toLowerCase()} ${p.giro} di ${p.giri})` : '');
+    }
+    const vecchio = letto();
+    const mandato = vecchio && vecchio.mandato ? new Date(vecchio.mandato) : null;
+    $('giaMandato').hidden = !mandato;
+    if (mandato) {
+      $('giaMandato').textContent = `✅ Già mandato a F.R.I.D.A.Y alle ${mandato.getHours()}:${String(mandato.getMinutes()).padStart(2, '0')}. `
+        + "Se lo rifai e lo rimandi, vale l'ultimo.";
     }
   }
 
@@ -585,6 +775,33 @@
       const minuti = Math.max(1, Math.round((st.finito - st.inizio) / 60000));
       $('fineTempo').textContent = minuti === 1 ? '1 minuto' : `${minuti} minuti`;
       $('fineTitolo').textContent = c.t || '';
+      const fatti = CORSA ? [] : raccolta();
+      const box = $('fineRiepilogo');
+      box.textContent = '';
+      box.hidden = !fatti.length;
+      if (fatti.length) {
+        const ol = document.createElement('ol');
+        ol.className = 'riepilogo';
+        fatti.forEach(e => {
+          const li = document.createElement('li');
+          li.append(dividi(e.n).nome + ': ');
+          const b = document.createElement('b');
+          b.textContent = serieAParole(e.s, e.u);
+          li.append(b);
+          ol.append(li);
+        });
+        box.append(ol);
+      }
+      if (st.mandato) {
+        $('manda').hidden = true;
+        esitoManda('✅ Arrivato. F.R.I.D.A.Y ti ha risposto su Telegram.', true);
+      } else if (!c.f) {                        // link di prima del 30/09: la casella non lo accetta
+        $('manda').hidden = true;
+        esitoManda('Questo link è di prima: tocca ✅ fatto nel promemoria di F.R.I.D.A.Y.');
+      } else if (!mandando) {
+        $('manda').hidden = false;
+        if (!erroreManda) esitoManda('');
+      }
       return mostra('scFine');
     }
     mostra('scGiro');
@@ -611,6 +828,15 @@
       $('esPeso').textContent = p.kg == null ? '' : `ultima volta ${kg(p.kg)}`;
       $('esDettaglio').textContent = p.dettaglio;
       $('esTempo').hidden = !p.sec;
+      $('registra').hidden = !registrabile(p);
+      if (registrabile(p)) {
+        $('rEtichetta').textContent = p.u === 'sec' ? 'Secondi' : 'Ripetizioni';
+        if (document.activeElement !== $('rValore')) $('rValore').value = st.cur.r == null ? '' : st.cur.r;
+        if (document.activeElement !== $('kgValore')) $('kgValore').value = scriviKg(st.cur.kg);
+      }
+      const classiche = registrabile(p) && p.unita === 'Serie';
+      $('rigaSerie').hidden = !classiche;
+      $('ultimaSerie').hidden = !(classiche && n && n.blocco === p.blocco);
       // in lezione non c'è la schermata del recupero: il "dopo" si vede qui
       $('esPoi').hidden = !(LEZIONE && n);
       $('esPoi').textContent = LEZIONE && n ? `Dopo: ${n.nome} — ${n.q}` + (n.giri > 1 ? ` (serie ${n.giro} di ${n.giri})` : '') : '';
@@ -658,10 +884,41 @@
     else if (st.i > 0) vai(st.i - 1);
   };
   $('termina').onclick = () => { if (confirm('Terminare adesso?')) fine(); };
-  $('daCapo').onclick = () => { st = null; try { localStorage.removeItem(K_STATO); } catch (e) {} disegna(); };
+  $('daCapo').onclick = () => {
+    if (st && !st.mandato && raccolta().length && !confirm('Le serie segnate non sono state mandate. Cancellarle?')) return;
+    st = null;
+    erroreManda = false;
+    try { localStorage.removeItem(K_STATO); } catch (e) {}
+    esitoManda('');
+    disegna();
+  };
+  $('manda').onclick = manda;
+  $('piuSerie').onclick = () => { if (st && st.fase === 'es') piuSerie(); };
+  $('ultimaSerie').onclick = () => { if (st && st.fase === 'es') ultimaSerie(); };
+  const passo = () => P[st.i].u === 'sec' ? 5 : 1;
+  $('rMeno').onclick = () => {
+    if (!st || st.fase !== 'es' || st.cur.r == null) return;
+    st.cur.r = Math.max(0, st.cur.r - passo());
+    salva(); disegna();
+  };
+  $('rPiu').onclick = () => {
+    if (!st || st.fase !== 'es') return;
+    st.cur.r = st.cur.r == null ? passo() : Math.min(999, st.cur.r + passo());
+    salva(); disegna();
+  };
+  $('rValore').oninput = () => {
+    const x = parseInt($('rValore').value, 10);
+    st.cur.r = x >= 0 && x < 1000 ? x : null;
+    salva();
+  };
+  $('kgValore').oninput = () => { st.cur.kg = numeroKg($('kgValore').value); salva(); };
+  ['rValore', 'kgValore'].forEach(id => {
+    $(id).onkeydown = ev => { if (ev.key === 'Enter') $(id).blur(); };
+    $(id).onblur = () => { if (st && st.fase === 'es') disegna(); };   // riscrive il numero come l'ha capito
+  });
   window.addEventListener('hashchange', () => location.reload());
 
-  window.circuito = { passi: P, stato: () => st, frasi: frasiDelCircuito, chiave };   // per le prove automatiche
+  window.circuito = { get passi() { return P; }, stato: () => st, frasi: frasiDelCircuito, chiave, raccolta };   // per le prove automatiche
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});   // anche senza rete
   disegna();
 })();
