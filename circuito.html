@@ -107,6 +107,11 @@
   .riepilogo { margin: 0; padding-left: 20px; }
   .riepilogo li { padding: 4px 0; font-size: 16px; line-height: 1.35; }
   .riepilogo b { color: var(--accent); }
+  /* quanto è stata dura (02/10): voto × minuti = carico */
+  .voti { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .voti button { min-height: 52px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg);
+                 font-size: 22px; font-weight: bold; }
+  .voti button.scelto { background: var(--accent); border-color: var(--accent); color: #fff; }
   .bollino-prova { background: #FFE08A; color: #3D2E00; border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: bold; text-align: center; }
 </style>
 </head>
@@ -135,6 +140,7 @@
     </div>
     <div id="blocchi" class="fondo"></div>
     <p id="giaMandato" class="avviso bene" hidden></p>
+    <p id="avvisoOrologio" class="avviso"></p>
     <button id="provaVoce" class="pulsante" type="button">🔊 Prova la voce</button>
     <p id="esitoVoce" class="avviso" hidden></p>
     <div class="fondo">
@@ -211,6 +217,11 @@
       <div id="fineTitolo" class="dettaglio"></div>
     </div>
     <div id="fineRiepilogo" class="blocco" hidden></div>
+    <div id="fatica" class="blocco">
+      <h3>Quanto è stata dura?</h3>
+      <p>1 = facilissima · 10 = al limite</p>
+      <div id="voti" class="voti"></div>
+    </div>
     <p id="esitoManda" class="avviso" hidden></p>
     <button id="manda" class="grande" type="button">📤 Manda a F.R.I.D.A.Y</button>
     <button id="daCapo" class="link" type="button">Rifai da capo</button>
@@ -419,6 +430,20 @@
     $('esitoManda').textContent = testo || '';
     $('esitoManda').className = 'avviso' + (bene ? ' bene' : '');
   }
+  // i minuti dell'allenamento, dal Via all'ultimo Fatto (per il carico: voto × minuti)
+  const minutiFatti = () => st && st.finito ? Math.max(1, Math.round((st.finito - st.inizio) / 60000)) : undefined;
+  function disegnaVoti() {
+    const box = $('voti');
+    box.textContent = '';
+    for (let v = 1; v <= 10; v++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = v;
+      b.className = st && st.rpe === v ? 'scelto' : '';
+      b.onclick = () => { st.rpe = v; salva(); disegnaVoti(); };
+      box.append(b);
+    }
+  }
   let mandando = false, erroreManda = false;
   async function manda() {
     if (!st || st.fase !== 'fine' || mandando) return;
@@ -430,7 +455,8 @@
       const r = await fetch(CASELLA, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },    // testo semplice: niente domanda preventiva del browser
-        body: JSON.stringify({ v: 1, k: c.k, f: c.f, t: c.t, prova: PROVA || undefined, es: CORSA ? [] : raccolta() }),
+        body: JSON.stringify({ v: 1, k: c.k, f: c.f, t: c.t, prova: PROVA || undefined, es: CORSA ? [] : raccolta(),
+                               r: st.rpe || undefined, min: minutiFatti() }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) throw new Error(j.errore || `risposta ${r.status}`);
@@ -771,6 +797,10 @@
     const vecchio = letto();
     const mandato = vecchio && vecchio.mandato ? new Date(vecchio.mandato) : null;
     $('giaMandato').hidden = !mandato;
+    // Mi Fitness passa il battito solo durante gli allenamenti avviati sull'orologio (01/10)
+    $('avvisoOrologio').textContent = '⌚ Prima di partire avvia l\'allenamento anche sull\'orologio ('
+      + (CORSA ? 'Corsa all\'aperto' : 'allenamento di forza o libero')
+      + '): così F.R.I.D.A.Y riceve il battito. Alla fine fermalo e salvalo.';
     if (mandato) {
       $('giaMandato').textContent = `✅ Già mandato a F.R.I.D.A.Y alle ${mandato.getHours()}:${String(mandato.getMinutes()).padStart(2, '0')}. `
         + "Se lo rifai e lo rimandi, vale l'ultimo.";
@@ -802,6 +832,8 @@
         });
         box.append(ol);
       }
+      $('fatica').hidden = !!st.mandato || !c.f;
+      disegnaVoti();
       if (st.mandato) {
         $('manda').hidden = true;
         esitoManda('✅ Arrivato. F.R.I.D.A.Y ti ha risposto su Telegram.', true);
