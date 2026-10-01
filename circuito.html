@@ -85,7 +85,7 @@
   .prossimo b { color: var(--accent); }
   .pausa-avviso { text-align: center; font-size: 22px; font-weight: bold; color: var(--accent); }
   .fondo { display: flex; flex-direction: column; gap: 6px; }
-  .riga-link { display: flex; justify-content: space-between; }
+  .riga-link { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 4px; }
   .avviso { margin: 0; background: var(--card); border: 2px solid var(--accent); border-radius: 12px;
             padding: 12px 14px; font-size: 16px; line-height: 1.45; }
   .avviso { white-space: pre-line; }
@@ -203,6 +203,7 @@
       <button id="salta" class="grande secondo" type="button">Salta il recupero ⏭</button>
       <div class="riga-link">
         <button id="indietro" class="link" type="button">↩ Indietro</button>
+        <button id="saltaEs" class="link" type="button">⏭ Salta esercizio</button>
         <button id="termina" class="link" type="button">Termina</button>
       </div>
     </div>
@@ -863,6 +864,7 @@
     $('pausa').textContent = st.pausa != null ? '▶️ Riprendi' : '⏸ Pausa';
     $('avvisoPausa').hidden = st.pausa == null;
     $('indietro').hidden = !rec && st.i === 0;
+    $('saltaEs').hidden = rec;
     if (!rec) {
       $('esNome').textContent = p.nome;
       $('esQuanto').textContent = p.q;
@@ -928,6 +930,17 @@
     else if (st.i > 0) vai(st.i - 1);
   };
   $('termina').onclick = () => { if (confirm('Terminare adesso?')) fine(); };
+  // "Salta esercizio" (02/10): via questa serie e le prossime dello stesso esercizio, senza segnarle.
+  // Prima per passare oltre bisognava toccare Fatto, e restava una serie mai fatta (il rematore del 01/10).
+  $('saltaEs').onclick = () => {
+    if (!st || st.fase !== 'es') return;
+    const p = P[st.i];
+    if (!confirm(`Saltare ${p.nome}? Non viene segnato.`)) return;
+    const resto = P.slice(st.i).filter(x => x.testo !== p.testo);
+    P.splice(st.i, P.length - st.i, ...resto);
+    if (st.i >= P.length) return fine();
+    vai(st.i);
+  };
   $('daCapo').onclick = () => {
     if (st && !st.mandato && raccolta().length && !confirm('Le serie segnate non sono state mandate. Cancellarle?')) return;
     st = null;
